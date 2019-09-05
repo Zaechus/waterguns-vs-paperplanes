@@ -1,0 +1,15 @@
+{
+  "name": "wvp-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Maxwell Anderson",
+  "license": "MIT",
+  "dependencies": {
+    "waterguns-vs-paperplanes": "file:./waterguns-vs-paperplanes/pkg",
+    "webpack": "^4.39.3"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.7"
+  }
+}
