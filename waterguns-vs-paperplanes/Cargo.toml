@@ -5,6 +5,7 @@ version = "0.1.0"
 authors = ["Maxwell Anderson, Caleb McDonald, Angelina Wanderlingh"]
 edition = "2018"
 license = "MIT"
+repository = "https://github.com/Zaechus/waterguns-vs-paperplanes"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -21,5 +22,5 @@ wee_alloc = { version = "0.4.2", optional = true }
 [dev-dependencies]
 wasm-bindgen-test = "0.2"
 
-# [profile.release]
-# opt-level = "s"
+[profile.release]
+opt-level = "s"

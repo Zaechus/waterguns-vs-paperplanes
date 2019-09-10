@@ -1,3 +1,5 @@
+mod plane;
+mod tower;
 mod utils;
 
 use wasm_bindgen::prelude::*;
@@ -7,16 +9,6 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn test_fn() {
-    alert("test fn");
-}
-
-#[wasm_bindgen]
-pub fn panic_logger() {
+pub fn init() {
     utils::set_panic_hook();
 }
