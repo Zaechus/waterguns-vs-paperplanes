@@ -1,5 +1,7 @@
 import { PaperPlane, init } from "waterguns-vs-paperplanes";
 
+import { drawPlane } from "./draw.js";
+
 (() => {
     init();
 
@@ -11,16 +13,12 @@ import { PaperPlane, init } from "waterguns-vs-paperplanes";
 
     const ctx = canvas.getContext("2d");
 
-    let plane = PaperPlane.new(10);
+    let plane = PaperPlane.new(10, 100);
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.beginPath();
-        ctx.rect(plane.x(), 100, 10, 10);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fill();
-        ctx.closePath();
+        drawPlane(ctx, plane.x(), plane.y(), 25, 25);
 
         plane.fly();
     }
@@ -28,7 +26,6 @@ import { PaperPlane, init } from "waterguns-vs-paperplanes";
     function mouseMove(e) {
         mouseX = e.screenX;
     }
-
     document.addEventListener('mousemove', mouseMove);
 
     setInterval(draw, 10);

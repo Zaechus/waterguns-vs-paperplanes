@@ -6,7 +6,7 @@
   "author": "Maxwell Anderson",
   "license": "MIT",
   "dependencies": {
-    "waterguns-vs-paperplanes": "file:./waterguns-vs-paperplanes/pkg",
+    "waterguns-vs-paperplanes": "file:./crate/pkg",
     "webpack": "^4.39.3"
   },
   "devDependencies": {
