@@ -5,8 +5,8 @@ var draw_js_1 = require("./draw.js");
 (function () {
     waterguns_vs_paperplanes_1.init();
     var canvas = document.getElementById("gameCanvas");
-    canvas.width = 800;
-    canvas.height = 600;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     var mouseX = canvas.width / 2;
     var ctx = canvas.getContext("2d");
     var plane = waterguns_vs_paperplanes_1.PaperPlane["new"](10, 100);

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "author": "Maxwell Anderson",
+  "author": "Maxwell Anderson, Caleb McDonald, Angelina Wanderlingh",
   "license": "MIT",
   "dependencies": {
     "waterguns-vs-paperplanes": "file:./crate/pkg",

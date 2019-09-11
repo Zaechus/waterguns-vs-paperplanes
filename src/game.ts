@@ -6,8 +6,8 @@ import { drawPlane } from "./draw.js";
     init();
 
     const canvas = <HTMLCanvasElement>document.getElementById("gameCanvas");
-    canvas.width = 800;
-    canvas.height = 600;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     var mouseX = canvas.width / 2;
 
