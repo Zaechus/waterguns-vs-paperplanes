@@ -1,10 +1,7 @@
-"use strict";
-exports.__esModule = true;
-function drawPlane(ctx, x, y, w, h) {
+export function drawPlane(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
     ctx.beginPath();
     ctx.rect(x, y, w, h);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     ctx.closePath();
 }
-exports.drawPlane = drawPlane;
