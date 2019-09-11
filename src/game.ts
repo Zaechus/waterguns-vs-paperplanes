@@ -18,7 +18,7 @@ import { drawPlane } from "./draw.js";
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        drawPlane(ctx, plane.x(), plane.y(), 25, 25);
+        drawPlane(ctx, plane.x(), plane.y(), 25);
 
         plane.fly();
     }

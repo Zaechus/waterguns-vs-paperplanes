@@ -12,7 +12,7 @@ var draw_js_1 = require("./draw.js");
     var plane = waterguns_vs_paperplanes_1.PaperPlane["new"](10, 100);
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_js_1.drawPlane(ctx, plane.x(), plane.y(), 25, 25);
+        draw_js_1.drawPlane(ctx, plane.x(), plane.y(), 25);
         plane.fly();
     }
     function mouseMove(e) {
