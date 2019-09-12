@@ -5,9 +5,8 @@ rm dist/*.wasm
 cd crate
 wasm-pack build
 
-cd ../src
-tsc *.ts
+cd ../src/ts
+tsc *.ts --outDir ..
 
-cd ..
+cd ../..
 npx webpack
-cp static/* dist/

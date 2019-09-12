@@ -1,15 +1,16 @@
 #!/bin/sh
 
+rm dist/*.wasm
+
 cd crate
 wasm-pack build
 
 cd ..
 npm install
 
-cd src
-tsc *.ts
+cd src/ts
+tsc *.ts --outDir ..
 
-cd ..
+cd ../..
 npx webpack
-cp static/* dist/
 cargo run

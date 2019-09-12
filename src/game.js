@@ -9,7 +9,7 @@ var draw_js_1 = require("./draw.js");
     canvas.height = window.innerHeight;
     var mouseX = canvas.width / 2;
     var ctx = canvas.getContext("2d");
-    var plane = waterguns_vs_paperplanes_1.PaperPlane["new"](10, 100);
+    var plane = waterguns_vs_paperplanes_1.PaperPlane["new"](50, 100);
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_js_1.drawPlane(ctx, plane.x(), plane.y(), 25);

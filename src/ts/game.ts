@@ -13,7 +13,7 @@ import { drawPlane } from "./draw.js";
 
     const ctx = canvas.getContext("2d");
 
-    let plane = PaperPlane.new(10, 100);
+    let plane = PaperPlane.new(50, 100);
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
