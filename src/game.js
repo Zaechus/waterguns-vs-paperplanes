@@ -1,7 +1,6 @@
 "use strict";
 exports.__esModule = true;
 var waterguns_vs_paperplanes_1 = require("waterguns-vs-paperplanes");
-var draw_js_1 = require("./draw.js");
 (function () {
     waterguns_vs_paperplanes_1.init();
     var canvas = document.getElementById("gameCanvas");
@@ -10,16 +9,15 @@ var draw_js_1 = require("./draw.js");
     var mouseX = canvas.width / 2;
     var ctx = canvas.getContext("2d");
     var planeImage = new Image(50, 50);
-    var plane = waterguns_vs_paperplanes_1.PaperPlane["new"](50, 100);
+    planeImage.src = "static/plane.png";
     var planes = [];
     for (var x = 0; x < 7; x += 1) {
-        planes.push(waterguns_vs_paperplanes_1.PaperPlane["new"](50 + x * 100, 100));
+        planes.push(waterguns_vs_paperplanes_1.PaperPlane["new"](planeImage, 50 + x * 100, 100, 50, 50, 10));
     }
-    planeImage.src = "static/plane.png";
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (var x = 0; x < 7; x += 1) {
-            draw_js_1.drawPlane(ctx, planeImage, planes[x].x(), planes[x].y(), planeImage.width, planeImage.height);
+            planes[x].draw(ctx);
             planes[x].fly();
         }
     }
