@@ -1,9 +1,3 @@
-export function drawPlane(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.lineTo(x + r, y + r);
-    ctx.lineTo(x - r, y + r);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fill();
-    ctx.closePath();
+export function drawPlane(ctx: CanvasRenderingContext2D, img: CanvasImageSource, x: number, y: number, w: number, h: number) {
+    ctx.drawImage(img, x, y, w, h);
 }

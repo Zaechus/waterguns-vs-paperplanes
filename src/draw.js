@@ -1,12 +1,6 @@
 "use strict";
 exports.__esModule = true;
-function drawPlane(ctx, x, y, r) {
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.lineTo(x + r, y + r);
-    ctx.lineTo(x - r, y + r);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fill();
-    ctx.closePath();
+function drawPlane(ctx, img, x, y, w, h) {
+    ctx.drawImage(img, x, y, w, h);
 }
 exports.drawPlane = drawPlane;
