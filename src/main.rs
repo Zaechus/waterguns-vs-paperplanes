@@ -9,17 +9,17 @@ use rocket::response::NamedFile;
 
 #[get("/")]
 fn index() -> Option<NamedFile> {
-    NamedFile::open(Path::new("static/index.html")).ok()
+    NamedFile::open(Path::new("public/index.html")).ok()
 }
 
-#[get("/<file..>", rank = 0)]
+#[get("/<file..>", rank = 1)]
 fn files(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("dist/").join(file)).ok()
 }
 
-#[get("/styles.css")]
-fn styles() -> Option<NamedFile> {
-    NamedFile::open(Path::new("static/styles.css")).ok()
+#[get("/static/<file..>", rank = 0)]
+fn static_files(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/static/").join(file)).ok()
 }
 
 #[get("/favicon.ico")]
@@ -29,6 +29,6 @@ fn favicon() -> Option<NamedFile> {
 
 fn main() {
     rocket::ignite()
-        .mount("/", routes![index, files, styles, favicon])
+        .mount("/", routes![index, files, static_files, favicon])
         .launch();
 }
