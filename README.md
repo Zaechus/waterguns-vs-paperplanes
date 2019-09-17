@@ -6,3 +6,4 @@ A tower defense game where Water Guns defend against Paper Airplanes.
 * wasm-pack
 * npm
 * Typescript
+* Python
