@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 from subprocess import call
-from shutil import rmtree
 import os
 
 if os.path.exists("dist"):
-    rmtree("dist")
+    os.chdir("dist")
+    for filename in os.listdir("."):
+        if filename.endswith(".wasm"):
+            os.remove(filename)
+    os.chdir("..")
 
 os.chdir("crate")
 call(["wasm-pack", "build"])

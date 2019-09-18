@@ -1,5 +1,5 @@
-mod plane;
-mod tower;
+mod entities;
+mod types;
 mod utils;
 
 use wasm_bindgen::prelude::*;
