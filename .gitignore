@@ -6,3 +6,4 @@ dist
 
 *.js
 !index.js
+!webpack.config.js
