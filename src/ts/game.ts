@@ -22,7 +22,7 @@ import { PaperPlane, Tower, Rect, init } from "waterguns-vs-paperplanes";
         planes.push(PaperPlane.new(planeImage, Rect.new(50 + i * 100, 10 + i * 25, 50, 50), 50));
     }
 
-    let tower = Tower.new(gunImage, Rect.new(canvas.width / 2, canvas.height / 2, 75, 75), 10, 50);
+    let tower = Tower.new(gunImage, Rect.new(canvas.width / 2, canvas.height / 2, 75, 75), 15, 50);
 
     function kill() {
         for (let i = 0; i < planes.length; i += 1) {
