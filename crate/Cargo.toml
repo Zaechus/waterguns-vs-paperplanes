@@ -24,6 +24,7 @@ version = "0.3"
 features = [
   "CanvasRenderingContext2d",
   "HtmlCanvasElement",
+  "Performance",
 ]
 
 [dev-dependencies]

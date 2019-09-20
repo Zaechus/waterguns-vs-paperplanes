@@ -2,6 +2,7 @@
   "name": "wvp-server",
   "version": "1.0.0",
   "description": "",
+  "repository": "https://github.com/Maxgy/waterguns-vs-paperplanes",
   "main": "index.js",
   "author": "Maxwell Anderson, Caleb McDonald, Angelina Wanderlingh",
   "license": "MIT",

@@ -4,8 +4,7 @@ build:
     cd src/ts; tsc *.ts --outDir ..; cd ../..
     npx webpack
 
-wasm: 
-    rm dist/*.wasm
+wasm:
     cd crate; wasm-pack build; cd ..
     npx webpack
 

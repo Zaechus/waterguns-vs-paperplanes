@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, Performance};
 
 use crate::types::Rect;
 
@@ -13,6 +13,7 @@ pub struct Tower {
     h: f64,
     dmg: i32,
     range: f64,
+    last_dmg_time: f64,
 }
 
 #[wasm_bindgen]
@@ -26,6 +27,7 @@ impl Tower {
             h: rect.h,
             dmg,
             range,
+            last_dmg_time: 0.0,
         }
     }
 
@@ -42,8 +44,26 @@ impl Tower {
         self.h
     }
 
-    pub fn damage(&self) -> i32 {
-        self.dmg
+    pub fn left_range(&self) -> f64 {
+        self.x - self.range
+    }
+    pub fn right_range(&self) -> f64 {
+        self.x + self.w + self.range
+    }
+    pub fn top_range(&self) -> f64 {
+        self.y - self.range
+    }
+    pub fn bottom_range(&self) -> f64 {
+        self.y + self.h + self.range
+    }
+
+    pub fn damage(&mut self, perf: Performance) -> i32 {
+        if (perf.now() - self.last_dmg_time).abs() > 750.0 {
+            self.last_dmg_time = perf.now();
+            self.dmg
+        } else {
+            0
+        }
     }
 
     pub fn draw(&self, ctx: CanvasRenderingContext2d) -> Result<(), JsValue> {

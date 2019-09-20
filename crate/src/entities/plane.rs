@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
+use crate::entities::Tower;
 use crate::types::Rect;
 
 #[wasm_bindgen]
@@ -42,6 +43,13 @@ impl PaperPlane {
         self.h
     }
 
+    pub fn right_side(&self) -> f64 {
+        self.x + self.w
+    }
+    pub fn bottom_side(&self) -> f64 {
+        self.y + self.h
+    }
+
     pub fn hp(&self) -> i32 {
         self.hp
     }
@@ -49,13 +57,18 @@ impl PaperPlane {
         self.hp as f64 / self.max_hp as f64
     }
 
-    pub fn take_damage(&mut self, dmg: i32) {
-        self.hp -= dmg;
+    pub fn take_damage(&mut self, tower: &Tower, dmg: i32) {
+        if self.right_side() > tower.left_range()
+            && self.x < tower.right_range()
+            && self.bottom_side() > tower.top_range()
+            && self.y < tower.bottom_range()
+        {
+            self.hp -= dmg;
+        }
     }
 
     pub fn fly(&mut self) {
-        self.x += 1.0;
-        self.y += 1.0;
+        self.x += 2.0;
     }
 
     pub fn draw(&self, ctx: CanvasRenderingContext2d) -> Result<(), JsValue> {
