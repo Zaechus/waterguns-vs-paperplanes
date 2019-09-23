@@ -1,13 +1,11 @@
 use wasm_bindgen::prelude::*;
 
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::entities::Tower;
 use crate::types::Rect;
 
 #[wasm_bindgen]
 pub struct PaperPlane {
-    img: HtmlCanvasElement,
     x: f64,
     y: f64,
     w: f64,
@@ -18,9 +16,8 @@ pub struct PaperPlane {
 
 #[wasm_bindgen]
 impl PaperPlane {
-    pub fn new(img: HtmlCanvasElement, rect: Rect, hp: i32) -> Self {
+    pub fn new(rect: Rect, hp: i32) -> Self {
         Self {
-            img,
             x: rect.x,
             y: rect.y,
             w: rect.w,
@@ -57,24 +54,20 @@ impl PaperPlane {
         self.hp as f64 / self.max_hp as f64
     }
 
-    pub fn take_damage(&mut self, tower: &Tower, dmg: i32) {
-        if self.right_side() > tower.left_range()
-            && self.x < tower.right_range()
-            && self.bottom_side() > tower.top_range()
-            && self.y < tower.bottom_range()
-        {
-            self.hp -= dmg;
-        }
+    pub fn take_damage(&mut self, dmg: i32) {
+        self.hp -= dmg;
     }
 
     pub fn fly(&mut self) {
-        self.x += 2.0;
+        self.x += 1.7;
     }
 
-    pub fn draw(&self, ctx: CanvasRenderingContext2d) -> Result<(), JsValue> {
-        ctx.draw_image_with_html_canvas_element_and_dw_and_dh(
-            &self.img, self.x, self.y, self.w, self.h,
-        )?;
+    pub fn draw(
+        &self,
+        ctx: &CanvasRenderingContext2d,
+        img: &HtmlImageElement,
+    ) -> Result<(), JsValue> {
+        ctx.draw_image_with_html_image_element_and_dw_and_dh(img, self.x, self.y, self.w, self.h)?;
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#00ff00"));
         ctx.fill_rect(self.x, self.y, self.w * self.hp_percent(), 3.0);

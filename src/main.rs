@@ -12,6 +12,11 @@ fn index() -> Option<NamedFile> {
     NamedFile::open(Path::new("public/index.html")).ok()
 }
 
+#[catch(404)]
+fn not_found() -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/404.html")).ok()
+}
+
 #[get("/<file..>", rank = 2)]
 fn files(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("dist/").join(file)).ok()
@@ -29,6 +34,7 @@ fn favicon() -> Option<NamedFile> {
 
 fn main() {
     rocket::ignite()
+        .register(catchers![not_found])
         .mount("/", routes![index, files, static_files, favicon])
         .launch();
 }

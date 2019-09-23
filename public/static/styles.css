@@ -2,7 +2,7 @@ body {
     margin: 0;
 }
 
-#gameCanvas {
+canvas {
     background: lightslategray;
     display: block;
 }

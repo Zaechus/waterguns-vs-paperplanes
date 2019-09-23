@@ -1,4 +1,5 @@
 mod entities;
+mod game;
 mod types;
 mod utils;
 

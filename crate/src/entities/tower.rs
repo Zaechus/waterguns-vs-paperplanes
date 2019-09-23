@@ -1,12 +1,14 @@
 use wasm_bindgen::prelude::*;
 
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, Performance};
+use js_sys::Date;
 
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+
+use crate::entities::PaperPlane;
 use crate::types::Rect;
 
 #[wasm_bindgen]
 pub struct Tower {
-    img: HtmlCanvasElement,
     x: f64,
     y: f64,
     w: f64,
@@ -18,9 +20,8 @@ pub struct Tower {
 
 #[wasm_bindgen]
 impl Tower {
-    pub fn new(img: HtmlCanvasElement, rect: Rect, dmg: i32, range: f64) -> Self {
+    pub fn new(rect: Rect, dmg: i32, range: f64) -> Self {
         Self {
-            img,
             x: rect.x,
             y: rect.y,
             w: rect.w,
@@ -57,19 +58,26 @@ impl Tower {
         self.y + self.h + self.range
     }
 
-    pub fn damage(&mut self, perf: Performance) -> i32 {
-        if (perf.now() - self.last_dmg_time).abs() > 750.0 {
-            self.last_dmg_time = perf.now();
-            self.dmg
-        } else {
-            0
+    pub fn damage(&mut self, plane: &mut PaperPlane) {
+        if plane.right_side() > self.left_range()
+            && plane.x() < self.right_range()
+            && plane.bottom_side() > self.top_range()
+            && plane.y() < self.bottom_range()
+        {
+            if (Date::now() - self.last_dmg_time).abs() > 750.0 {
+                self.last_dmg_time = Date::now();
+
+                plane.take_damage(self.dmg);
+            }
         }
     }
 
-    pub fn draw(&self, ctx: CanvasRenderingContext2d) -> Result<(), JsValue> {
-        ctx.draw_image_with_html_canvas_element_and_dw_and_dh(
-            &self.img, self.x, self.y, self.w, self.h,
-        )?;
+    pub fn draw(
+        &self,
+        ctx: &CanvasRenderingContext2d,
+        img: &HtmlImageElement,
+    ) -> Result<(), JsValue> {
+        ctx.draw_image_with_html_image_element_and_dw_and_dh(img, self.x, self.y, self.w, self.h)?;
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.stroke_rect(
