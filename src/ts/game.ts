@@ -3,15 +3,15 @@ import { Game } from "waterguns-vs-paperplanes";
 (() => {
     let game = Game.new();
 
-    function start() {
+    function gameLoop() {
         game.draw();
 
-        window.requestAnimationFrame(start);
+        window.requestAnimationFrame(gameLoop);
     }
+    gameLoop();
 
+    // warn user when reloading
     window.onbeforeunload = function () {
         return "reloading";
     };
-
-    start();
 })();
