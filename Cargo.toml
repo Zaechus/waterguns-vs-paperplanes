@@ -6,5 +6,13 @@ edition = "2018"
 license = "MIT"
 repository = "https://github.com/Zaechus/waterguns-vs-paperplanes"
 
+[workspace]
+members = [
+    "crate"
+]
+
 [dependencies]
 rocket = "0.4"
+
+[profile.release]
+opt-level = "s"
