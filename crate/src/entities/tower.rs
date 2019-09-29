@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use wasm_bindgen::prelude::*;
 
 use js_sys::Date;
@@ -32,38 +34,12 @@ impl Tower {
         }
     }
 
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-    pub fn w(&self) -> f64 {
-        self.w
-    }
-    pub fn h(&self) -> f64 {
-        self.h
-    }
-
-    pub fn left_range(&self) -> f64 {
-        self.x - self.range
-    }
-    pub fn right_range(&self) -> f64 {
-        self.x + self.w + self.range
-    }
-    pub fn top_range(&self) -> f64 {
-        self.y - self.range
-    }
-    pub fn bottom_range(&self) -> f64 {
-        self.y + self.h + self.range
-    }
-
     pub fn damage(&mut self, plane: &mut PaperPlane) {
-        if plane.right_side() > self.left_range()
-            && plane.x() < self.right_range()
-            && plane.bottom_side() > self.top_range()
-            && plane.y() < self.bottom_range()
-        {
+        let dx = self.x - plane.x() + plane.w() / 2.0;
+        let dy = self.y - plane.y() + plane.h() / 2.0;
+        let dist = (dx.powi(2) + dy.powi(2)).sqrt();
+        
+        if dist < self.range {
             if (Date::now() - self.last_dmg_time).abs() > 750.0 {
                 self.last_dmg_time = Date::now();
 
@@ -80,12 +56,16 @@ impl Tower {
         ctx.draw_image_with_html_image_element_and_dw_and_dh(img, self.x, self.y, self.w, self.h)?;
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
-        ctx.stroke_rect(
-            self.x - self.range,
-            self.y - self.range,
-            self.w + self.range * 2.0,
-            self.h + self.range * 2.0,
-        );
+        ctx.ellipse(
+            self.x + self.w / 2.0,
+            self.y + self.h / 2.0,
+            self.range,
+            self.range,
+            PI / 4.0,
+            0.0,
+            2.0 * PI,
+        )?;
+        ctx.stroke();
         ctx.close_path();
         Ok(())
     }

@@ -10,6 +10,8 @@ pub struct PaperPlane {
     y: f64,
     w: f64,
     h: f64,
+    center_x: f64,
+    center_y: f64,
     hp: i32,
     max_hp: u32,
 }
@@ -22,6 +24,8 @@ impl PaperPlane {
             y: rect.y,
             w: rect.w,
             h: rect.h,
+            center_x: rect.x + rect.w / 2.0,
+            center_y: rect.y + rect.h / 2.0,
             hp,
             max_hp: hp as u32,
         }
@@ -39,12 +43,11 @@ impl PaperPlane {
     pub fn h(&self) -> f64 {
         self.h
     }
-
-    pub fn right_side(&self) -> f64 {
-        self.x + self.w
+    pub fn center_x(&self) -> f64 {
+        self.center_x
     }
-    pub fn bottom_side(&self) -> f64 {
-        self.y + self.h
+    pub fn center_y(&self) -> f64 {
+        self.center_y
     }
 
     pub fn hp(&self) -> i32 {
