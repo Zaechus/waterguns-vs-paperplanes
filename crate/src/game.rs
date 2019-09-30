@@ -1,3 +1,6 @@
+use std::cell::Cell;
+use std::rc::Rc;
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
@@ -11,6 +14,9 @@ use crate::utils::set_panic_hook;
 pub struct Game {
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
+    mouse_x: f64,
+    mouse_y: f64,
+    mouse_pressed: Rc<Cell<bool>>,
     plane_image: HtmlImageElement,
     gun_image: HtmlImageElement,
     planes: Vec<PaperPlane>,
@@ -88,12 +94,15 @@ impl Game {
                     75.0,
                 ),
                 15,
-                200.0,
+                250.0,
             ));
         }
         Self {
             canvas,
             ctx,
+            mouse_pressed: Rc::new(Cell::new(false)),
+            mouse_x: 0.0,
+            mouse_y: 0.0,
             plane_image,
             gun_image,
             planes,
@@ -150,13 +159,40 @@ impl Game {
         }
     }
 
+    fn mouse_down_event(&mut self) {
+        let ctx = self.ctx.clone();
+        let mouse_pressed = self.mouse_pressed.clone();
+        let mouse = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            ctx.begin_path();
+            ctx.move_to(event.offset_x() as f64, event.offset_y() as f64);
+            mouse_pressed.set(true);
+        }) as Box<dyn FnMut(_)>);
+        self.canvas
+            .add_event_listener_with_callback("mousedown", mouse.as_ref().unchecked_ref())
+            .expect("mousedown event");
+        mouse.forget();
+    }
+
     pub fn draw(&mut self) -> Result<(), JsValue> {
-        self.ctx.clear_rect(
-            0.0,
-            0.0,
-            self.canvas.width().into(),
-            self.canvas.height().into(),
-        );
+        if self.mouse_pressed.get() {
+            self.ctx.begin_path();
+            self.ctx.set_fill_style(&JsValue::from_str("#00ff00"));
+            self.ctx.fill_rect(
+                0.0,
+                0.0,
+                self.canvas.width().into(),
+                self.canvas.height().into(),
+            );
+            self.ctx.close_path();
+            self.mouse_pressed.set(false);
+        } else {
+            self.ctx.clear_rect(
+                0.0,
+                0.0,
+                self.canvas.width().into(),
+                self.canvas.height().into(),
+            );
+        }
 
         self.render_text();
 
@@ -165,6 +201,8 @@ impl Game {
         self.remove_planes();
 
         self.render_planes();
+
+        self.mouse_down_event();
 
         Ok(())
     }
