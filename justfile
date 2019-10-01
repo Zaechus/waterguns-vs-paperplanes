@@ -1,4 +1,5 @@
 build:
+    cargo fmt
     rm dist/*.wasm || echo 0
     cd crate; wasm-pack build; cd ..
     cd src/ts; tsc *.ts --outDir ..; cd ../..

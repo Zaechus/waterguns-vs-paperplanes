@@ -38,9 +38,9 @@ impl Tower {
         let dx = self.x - plane.x() + plane.w() / 2.0;
         let dy = self.y - plane.y() + plane.h() / 2.0;
         let dist = (dx.powi(2) + dy.powi(2)).sqrt();
-        
+
         if dist < self.range {
-            if (Date::now() - self.last_dmg_time).abs() > 750.0 {
+            if Date::now() - self.last_dmg_time > 750.0 {
                 self.last_dmg_time = Date::now();
 
                 plane.take_damage(self.dmg);
@@ -52,8 +52,17 @@ impl Tower {
         &self,
         ctx: &CanvasRenderingContext2d,
         img: &HtmlImageElement,
+        firing_img: &HtmlImageElement,
     ) -> Result<(), JsValue> {
-        ctx.draw_image_with_html_image_element_and_dw_and_dh(img, self.x, self.y, self.w, self.h)?;
+        if Date::now() - self.last_dmg_time < 100.0 {
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                firing_img, self.x, self.y, self.w, self.h,
+            )?;
+        } else {
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                img, self.x, self.y, self.w, self.h,
+            )?;
+        }
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.ellipse(

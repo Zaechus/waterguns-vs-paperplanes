@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
@@ -14,11 +15,10 @@ use crate::utils::set_panic_hook;
 pub struct Game {
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
-    mouse_x: f64,
-    mouse_y: f64,
+    mouse_x: Rc<Cell<i32>>,
+    mouse_y: Rc<Cell<i32>>,
     mouse_pressed: Rc<Cell<bool>>,
-    plane_image: HtmlImageElement,
-    gun_image: HtmlImageElement,
+    sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
     hp: i32,
@@ -66,11 +66,21 @@ impl Game {
 
         ctx.set_font("36px monospace");
 
+        let mut sprites = HashMap::new();
+
         let plane_image = HtmlImageElement::new_with_width_and_height(50, 50).expect("plane image");
         plane_image.set_src("static/plane.png");
+        sprites.insert(String::from("plane"), plane_image);
 
-        let gun_image = HtmlImageElement::new_with_width_and_height(50, 50).expect("plane image");
-        gun_image.set_src("static/gun.png");
+        let watergun_image =
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGun image");
+        watergun_image.set_src("static/WaterGun.png");
+        sprites.insert(String::from("WaterGun"), watergun_image);
+
+        let watergun_shooting_image =
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunShooting image");
+        watergun_shooting_image.set_src("static/WaterGunShooting.png");
+        sprites.insert(String::from("WaterGunShooting"), watergun_shooting_image);
 
         let mut planes = Vec::new();
         for i in 0..50 {
@@ -101,10 +111,9 @@ impl Game {
             canvas,
             ctx,
             mouse_pressed: Rc::new(Cell::new(false)),
-            mouse_x: 0.0,
-            mouse_y: 0.0,
-            plane_image,
-            gun_image,
+            mouse_x: Rc::new(Cell::new(0)),
+            mouse_y: Rc::new(Cell::new(0)),
+            sprites,
             planes,
             towers,
             hp: 100,
@@ -121,12 +130,25 @@ impl Game {
         self.ctx
             .fill_text(&format!("Cash: {}", self.cash), 10.0, 80.0)
             .expect("display cash");
+        self.ctx
+            .fill_text(
+                &format!("X, Y: {}, {}", self.mouse_x.get(), self.mouse_y.get()),
+                10.0,
+                120.0,
+            )
+            .expect("display mouseXY");
         self.ctx.close_path();
     }
 
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
-            tower.draw(&self.ctx, &self.gun_image).expect("tower draw");
+            tower
+                .draw(
+                    &self.ctx,
+                    self.sprites.get("WaterGun").unwrap(),
+                    self.sprites.get("WaterGunShooting").unwrap(),
+                )
+                .expect("tower draw");
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
             }
@@ -153,18 +175,15 @@ impl Game {
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
             plane
-                .draw(&self.ctx, &self.plane_image)
+                .draw(&self.ctx, self.sprites.get("plane").unwrap())
                 .expect("plane draw");
             plane.fly();
         }
     }
 
     fn mouse_down_event(&mut self) {
-        let ctx = self.ctx.clone();
         let mouse_pressed = self.mouse_pressed.clone();
-        let mouse = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
-            ctx.begin_path();
-            ctx.move_to(event.offset_x() as f64, event.offset_y() as f64);
+        let mouse = Closure::wrap(Box::new(move |_event: web_sys::MouseEvent| {
             mouse_pressed.set(true);
         }) as Box<dyn FnMut(_)>);
         self.canvas
@@ -173,8 +192,21 @@ impl Game {
         mouse.forget();
     }
 
+    fn mouse_move(&mut self) {
+        let mouse_x = self.mouse_x.clone();
+        let mouse_y = self.mouse_y.clone();
+        let mouse = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            mouse_x.set(event.client_x());
+            mouse_y.set(event.client_y());
+        }) as Box<dyn FnMut(_)>);
+        self.canvas
+            .add_event_listener_with_callback("mousemove", mouse.as_ref().unchecked_ref())
+            .expect("mousemove event");
+        mouse.forget();
+    }
+
     pub fn draw(&mut self) -> Result<(), JsValue> {
-        if self.mouse_pressed.get() {
+        if self.mouse_pressed.get() && self.mouse_x.get() < 500 && self.mouse_y.get() < 500 {
             self.ctx.begin_path();
             self.ctx.set_fill_style(&JsValue::from_str("#00ff00"));
             self.ctx.fill_rect(
@@ -203,6 +235,8 @@ impl Game {
         self.render_planes();
 
         self.mouse_down_event();
+
+        self.mouse_move();
 
         Ok(())
     }
