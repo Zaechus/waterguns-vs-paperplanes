@@ -1,6 +1,4 @@
-use std::cell::Cell;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -15,9 +13,9 @@ use crate::utils::set_panic_hook;
 pub struct Game {
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
-    mouse_x: Rc<Cell<i32>>,
-    mouse_y: Rc<Cell<i32>>,
-    mouse_pressed: Rc<Cell<bool>>,
+    mouse_x: i32,
+    mouse_y: i32,
+    mouse_pressed: bool,
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
@@ -110,9 +108,9 @@ impl Game {
         Self {
             canvas,
             ctx,
-            mouse_pressed: Rc::new(Cell::new(false)),
-            mouse_x: Rc::new(Cell::new(0)),
-            mouse_y: Rc::new(Cell::new(0)),
+            mouse_pressed: false,
+            mouse_x: 0,
+            mouse_y: 0,
             sprites,
             planes,
             towers,
@@ -132,7 +130,7 @@ impl Game {
             .expect("display cash");
         self.ctx
             .fill_text(
-                &format!("X, Y: {}, {}", self.mouse_x.get(), self.mouse_y.get()),
+                &format!("X, Y: {}, {}", self.mouse_x, self.mouse_y),
                 10.0,
                 120.0,
             )
@@ -181,32 +179,16 @@ impl Game {
         }
     }
 
-    fn mouse_down_event(&mut self) {
-        let mouse_pressed = self.mouse_pressed.clone();
-        let mouse = Closure::wrap(Box::new(move |_event: web_sys::MouseEvent| {
-            mouse_pressed.set(true);
-        }) as Box<dyn FnMut(_)>);
-        self.canvas
-            .add_event_listener_with_callback("mousedown", mouse.as_ref().unchecked_ref())
-            .expect("mousedown event");
-        mouse.forget();
+    fn update_mouse(&mut self, x: i32, y: i32, pressed: bool) {
+        self.mouse_x = x;
+        self.mouse_y = y;
+        self.mouse_pressed = pressed;
     }
 
-    fn mouse_move(&mut self) {
-        let mouse_x = self.mouse_x.clone();
-        let mouse_y = self.mouse_y.clone();
-        let mouse = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
-            mouse_x.set(event.client_x());
-            mouse_y.set(event.client_y());
-        }) as Box<dyn FnMut(_)>);
-        self.canvas
-            .add_event_listener_with_callback("mousemove", mouse.as_ref().unchecked_ref())
-            .expect("mousemove event");
-        mouse.forget();
-    }
+    pub fn draw(&mut self, mouse_x: i32, mouse_y: i32, mouse_pressed: bool) -> Result<(), JsValue> {
+        self.update_mouse(mouse_x, mouse_y, mouse_pressed);
 
-    pub fn draw(&mut self) -> Result<(), JsValue> {
-        if self.mouse_pressed.get() && self.mouse_x.get() < 500 && self.mouse_y.get() < 500 {
+        if self.mouse_pressed && self.mouse_x < 500 && self.mouse_y < 500 {
             self.ctx.begin_path();
             self.ctx.set_fill_style(&JsValue::from_str("#00ff00"));
             self.ctx.fill_rect(
@@ -216,7 +198,6 @@ impl Game {
                 self.canvas.height().into(),
             );
             self.ctx.close_path();
-            self.mouse_pressed.set(false);
         } else {
             self.ctx.clear_rect(
                 0.0,
@@ -231,13 +212,8 @@ impl Game {
         self.render_towers();
 
         self.remove_planes();
-
         self.render_planes();
-
-        self.mouse_down_event();
-
-        self.mouse_move();
-
+        
         Ok(())
     }
 }
