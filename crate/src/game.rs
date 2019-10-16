@@ -5,7 +5,7 @@ use wasm_bindgen::JsCast;
 
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
-use crate::entities::*;
+use crate::entity::*;
 use crate::types::Rect;
 use crate::utils::set_panic_hook;
 
@@ -71,9 +71,14 @@ impl Game {
         sprites.insert(String::from("plane"), plane_image);
 
         let watergun_image =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGun image");
-        watergun_image.set_src("static/WaterGun.png");
-        sprites.insert(String::from("WaterGun"), watergun_image);
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBase image");
+        watergun_image.set_src("static/WaterGunBase.png");
+        sprites.insert(String::from("WaterGunBase"), watergun_image);
+
+        let watergun_image =
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunTop image");
+        watergun_image.set_src("static/WaterGunTop.png");
+        sprites.insert(String::from("WaterGunTop"), watergun_image);
 
         let watergun_shooting_image =
             HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunShooting image");
@@ -98,8 +103,8 @@ impl Game {
                 Rect::new(
                     500.0 + i as f64 * 1000.0,
                     canvas.height() as f64 / 2.0,
-                    75.0,
-                    75.0,
+                    80.0,
+                    80.0,
                 ),
                 15,
                 250.0,
@@ -143,7 +148,8 @@ impl Game {
             tower
                 .draw(
                     &self.ctx,
-                    self.sprites.get("WaterGun").unwrap(),
+                    self.sprites.get("WaterGunBase").unwrap(),
+                    self.sprites.get("WaterGunTop").unwrap(),
                     self.sprites.get("WaterGunShooting").unwrap(),
                 )
                 .expect("tower draw");
@@ -213,7 +219,6 @@ impl Game {
 
         self.remove_planes();
         self.render_planes();
-        
         Ok(())
     }
 }

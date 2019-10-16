@@ -6,7 +6,7 @@ use js_sys::Date;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::entities::PaperPlane;
+use crate::entity::PaperPlane;
 use crate::types::Rect;
 
 #[wasm_bindgen]
@@ -15,7 +15,10 @@ pub struct Tower {
     y: f64,
     w: f64,
     h: f64,
+    center_x: f64,
+    center_y: f64,
     dmg: i32,
+    dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,
 }
@@ -28,19 +31,22 @@ impl Tower {
             y: rect.y,
             w: rect.w,
             h: rect.h,
+            center_x: rect.x + rect.w / 2.0,
+            center_y: rect.y + rect.h / 2.0,
             dmg,
+            dmg_interval: 750.0,
             range,
             last_dmg_time: 0.0,
         }
     }
 
     pub fn damage(&mut self, plane: &mut PaperPlane) {
-        let dx = self.x - plane.x() + plane.w() / 2.0;
-        let dy = self.y - plane.y() + plane.h() / 2.0;
+        let dx = self.center_x - (plane.x() + plane.w() / 2.0);
+        let dy = self.center_y - (plane.y() + plane.h() / 2.0);
         let dist = (dx.powi(2) + dy.powi(2)).sqrt();
 
         if dist < self.range {
-            if Date::now() - self.last_dmg_time > 750.0 {
+            if Date::now() - self.last_dmg_time > self.dmg_interval {
                 self.last_dmg_time = Date::now();
 
                 plane.take_damage(self.dmg);
@@ -51,16 +57,24 @@ impl Tower {
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
-        img: &HtmlImageElement,
+        base_img: &HtmlImageElement,
+        top_img: &HtmlImageElement,
         firing_img: &HtmlImageElement,
     ) -> Result<(), JsValue> {
+        ctx.draw_image_with_html_image_element_and_dw_and_dh(
+            base_img,
+            self.x + self.w / 6.0,
+            self.y + self.h / 6.0,
+            self.w / 1.5,
+            self.h / 1.5,
+        )?;
         if Date::now() - self.last_dmg_time < 100.0 {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
                 firing_img, self.x, self.y, self.w, self.h,
             )?;
         } else {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                img, self.x, self.y, self.w, self.h,
+                top_img, self.x, self.y, self.w, self.h,
             )?;
         }
         ctx.begin_path();
