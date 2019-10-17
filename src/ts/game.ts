@@ -1,34 +1,42 @@
 import { Game } from "waterguns-vs-paperplanes";
 
 (() => {
+    var noContext = document.getElementsByTagName("canvas");
     var mouseX = 0;
     var mouseY = 0;
-    var mousePressed = false;
+    var mouseDown = false;
+    var mouseUp = false;
+    var mouseButton = 0;
 
     let game = Game.new();
 
     // render the actual game
     function gameLoop() {
-        game.draw(mouseX, mouseY, mousePressed);
+        console.log(mouseX, mouseY, mouseDown, mouseUp, mouseButton);
+        game.draw(mouseX, mouseY, mouseDown, mouseUp, mouseButton);
 
         window.requestAnimationFrame(gameLoop);
+        mouseUp = false;
     }
     gameLoop();
 
     // handle events
-    function mouseMove(e: MouseEvent) {
+    document.addEventListener('mousemove', (e: MouseEvent) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-    }
-    function mouseDown(e: MouseEvent) {
-        mousePressed = true;
-    }
-    function mouseUp(e: MouseEvent) {
-        mousePressed = false;
-    }
-    document.addEventListener('mousemove', mouseMove);
-    document.addEventListener('mousedown', mouseDown);
-    document.addEventListener('mouseup', mouseUp);
+    });
+    document.addEventListener('mousedown', (e: MouseEvent) => {
+        mouseDown = true;
+        mouseButton = e.button;
+    });
+    document.addEventListener('mouseup', (e: MouseEvent) => {
+        mouseUp = true;
+        mouseDown = false;
+    });
+
+    noContext[0].addEventListener('contextmenu', (e: MouseEvent) => {
+        e.preventDefault();
+    });
 
     // warn user when reloading
     window.onbeforeunload = function () {
