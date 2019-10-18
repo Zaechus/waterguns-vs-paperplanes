@@ -17,6 +17,10 @@ pub struct Tower {
     h: f64,
     center_x: f64,
     center_y: f64,
+    top_x: f64,
+    top_y: f64,
+    top_size: f64,
+    rotation: f64,
     dmg: i32,
     dmg_interval: f64,
     range: f64,
@@ -26,13 +30,20 @@ pub struct Tower {
 #[wasm_bindgen]
 impl Tower {
     pub fn new(rect: Rect, dmg: i32, range: f64) -> Self {
+        let center_x = rect.x + rect.w / 2.0;
+        let center_y = rect.y + rect.h / 2.0;
+        let top_size = rect.w * 1.75;
         Self {
             x: rect.x,
             y: rect.y,
             w: rect.w,
             h: rect.h,
-            center_x: rect.x + rect.w / 2.0,
-            center_y: rect.y + rect.h / 2.0,
+            center_x,
+            center_y,
+            top_x: center_x - top_size / 2.0,
+            top_y: center_y - top_size / 2.0,
+            top_size: top_size,
+            rotation: 0.0,
             dmg,
             dmg_interval: 750.0,
             range,
@@ -65,25 +76,28 @@ impl Tower {
             base_img, self.x, self.y, self.w, self.h,
         )?;
 
-        let size = self.w * 1.75;
-        let offset = size / 4.8;
-        let x = self.x - offset;
-        let y = self.y - offset;
         if Date::now() - self.last_dmg_time < 100.0 {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(firing_img, x, y, size, size)?;
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                firing_img,
+                self.top_x,
+                self.top_y,
+                self.top_size,
+                self.top_size,
+            )?;
         } else {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(top_img, x, y, size, size)?;
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                top_img,
+                self.top_x,
+                self.top_y,
+                self.top_size,
+                self.top_size,
+            )?;
         }
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
-        ctx.rect(self.x, self.y, self.w, self.h);
-        ctx.stroke();
-        ctx.close_path();
-        ctx.begin_path();
-        ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.ellipse(
-            self.x + self.w / 2.0,
-            self.y + self.h / 2.0,
+            self.center_x,
+            self.center_y,
             self.range,
             self.range,
             PI / 4.0,

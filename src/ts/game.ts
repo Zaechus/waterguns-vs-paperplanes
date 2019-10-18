@@ -32,6 +32,7 @@ import { Game } from "waterguns-vs-paperplanes";
     });
 
     noContext[0].addEventListener('contextmenu', (e: MouseEvent) => {
+        mouseDown = true;
         e.preventDefault();
     });
 
