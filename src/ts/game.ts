@@ -6,14 +6,12 @@ import { Game } from "waterguns-vs-paperplanes";
     var mouseY = 0;
     var mouseDown = false;
     var mouseUp = false;
-    var mouseButton = 0;
 
     let game = Game.new();
 
     // render the actual game
     function gameLoop() {
-        console.log(mouseX, mouseY, mouseDown, mouseUp, mouseButton);
-        game.draw(mouseX, mouseY, mouseDown, mouseUp, mouseButton);
+        game.draw(mouseX, mouseY, mouseDown, mouseUp);
 
         window.requestAnimationFrame(gameLoop);
         mouseUp = false;
@@ -27,7 +25,6 @@ import { Game } from "waterguns-vs-paperplanes";
     });
     document.addEventListener('mousedown', (e: MouseEvent) => {
         mouseDown = true;
-        mouseButton = e.button;
     });
     document.addEventListener('mouseup', (e: MouseEvent) => {
         mouseUp = true;

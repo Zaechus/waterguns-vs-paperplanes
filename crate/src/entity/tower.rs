@@ -62,21 +62,23 @@ impl Tower {
         firing_img: &HtmlImageElement,
     ) -> Result<(), JsValue> {
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            base_img,
-            self.x + self.w / 6.0,
-            self.y + self.h / 6.0,
-            self.w / 1.5,
-            self.h / 1.5,
+            base_img, self.x, self.y, self.w, self.h,
         )?;
+
+        let size = self.w * 1.75;
+        let offset = size / 4.8;
+        let x = self.x - offset;
+        let y = self.y - offset;
         if Date::now() - self.last_dmg_time < 100.0 {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                firing_img, self.x, self.y, self.w, self.h,
-            )?;
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(firing_img, x, y, size, size)?;
         } else {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                top_img, self.x, self.y, self.w, self.h,
-            )?;
+            ctx.draw_image_with_html_image_element_and_dw_and_dh(top_img, x, y, size, size)?;
         }
+        ctx.begin_path();
+        ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
+        ctx.rect(self.x, self.y, self.w, self.h);
+        ctx.stroke();
+        ctx.close_path();
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.ellipse(

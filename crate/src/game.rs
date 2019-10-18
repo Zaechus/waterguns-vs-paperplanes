@@ -10,7 +10,7 @@ use crate::types::Rect;
 use crate::utils::set_panic_hook;
 
 const PLANE_SIZE: f64 = 50.0;
-const TOWER_SIZE: f64 = 50.0;
+const TOWER_SIZE: f64 = 75.0;
 
 #[wasm_bindgen]
 pub struct Game {
@@ -20,7 +20,6 @@ pub struct Game {
     mouse_y: f64,
     mouse_down: bool,
     mouse_up: bool,
-    mouse_button: i32,
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
@@ -122,7 +121,6 @@ impl Game {
             mouse_up: false,
             mouse_x: 0.0,
             mouse_y: 0.0,
-            mouse_button: 0,
             sprites,
             planes,
             towers,
@@ -142,7 +140,7 @@ impl Game {
             .expect("display cash");
         self.ctx
             .fill_text(
-                &format!("X, Y: {}, {}", self.mouse_x, self.mouse_y,),
+                &format!("X, Y: {}, {}", self.mouse_x, self.mouse_y),
                 10.0,
                 120.0,
             )
@@ -192,12 +190,11 @@ impl Game {
         }
     }
 
-    fn update_mouse(&mut self, x: f64, y: f64, mouse_down: bool, mouse_up: bool, button: i32) {
+    fn update_mouse(&mut self, x: f64, y: f64, mouse_down: bool, mouse_up: bool) {
         self.mouse_x = x;
         self.mouse_y = y;
         self.mouse_down = mouse_down;
         self.mouse_up = mouse_up;
-        self.mouse_button = button;
     }
 
     pub fn draw(
@@ -206,9 +203,8 @@ impl Game {
         mouse_y: f64,
         mouse_down: bool,
         mouse_up: bool,
-        mouse_button: i32,
     ) -> Result<(), JsValue> {
-        self.update_mouse(mouse_x, mouse_y, mouse_down, mouse_up, mouse_button);
+        self.update_mouse(mouse_x, mouse_y, mouse_down, mouse_up);
 
         self.ctx.clear_rect(
             0.0,
@@ -217,19 +213,12 @@ impl Game {
             self.canvas.height().into(),
         );
 
-        if self.mouse_up && self.mouse_button == 0 {
-            if self.mouse_button == 0 {
-                self.towers.push(Tower::new(
-                    Rect::new(self.mouse_x, self.mouse_y, TOWER_SIZE, TOWER_SIZE),
-                    15,
-                    250.0,
-                ));
-            } else if self.mouse_button == 2 {
-                self.planes.push(PaperPlane::new(
-                    Rect::new(self.mouse_x, self.mouse_y, PLANE_SIZE, PLANE_SIZE),
-                    50,
-                ));
-            }
+        if self.mouse_up {
+            self.towers.push(Tower::new(
+                Rect::new(self.mouse_x, self.mouse_y, TOWER_SIZE, TOWER_SIZE),
+                15,
+                250.0,
+            ));
         }
 
         self.render_text();
