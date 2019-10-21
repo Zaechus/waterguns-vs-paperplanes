@@ -100,16 +100,6 @@ impl Game {
                 50,
             ));
         }
-        // for i in 0..50 {
-        //     planes.push(PaperPlane::new(
-        //         Square::new(
-        //             -i as f64 * 125.0 + 100.0,
-        //             canvas.height() as f64 / 3.5 + i as f64,
-        //             PLANE_SIZE,
-        //         ),
-        //         50,
-        //     ));
-        // }
         let mut towers = Vec::with_capacity(2);
         for i in 0..2 {
             towers.push(Tower::new(
