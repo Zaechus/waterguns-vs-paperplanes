@@ -211,7 +211,7 @@ impl Game {
             self.canvas.height().into(),
         );
 
-        if self.mouse_up && self.cash > 20 {
+        if self.mouse_up && self.cash >= 20 {
             self.towers.push(Tower::new(
                 Square::new(
                     self.mouse_x - TOWER_SIZE / 2.0,
