@@ -6,7 +6,7 @@ use wasm_bindgen::JsCast;
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::entity::*;
-use crate::types::Rect;
+use crate::types::Square;
 use crate::utils::set_panic_hook;
 
 const PLANE_SIZE: f64 = 50.0;
@@ -85,29 +85,37 @@ impl Game {
         sprites.insert(String::from("WaterGunTop"), watergun_image);
 
         let watergun_shooting_image =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunShooting image");
-        watergun_shooting_image.set_src("static/WaterGunShooting.png");
-        sprites.insert(String::from("WaterGunShooting"), watergun_shooting_image);
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBlast image");
+        watergun_shooting_image.set_src("static/WaterGunBlast.png");
+        sprites.insert(String::from("WaterGunBlast"), watergun_shooting_image);
 
-        let mut planes = Vec::new();
-        for i in 0..50 {
+        let mut planes = Vec::with_capacity(100);
+        for i in 0..100 {
             planes.push(PaperPlane::new(
-                Rect::new(
-                    -i as f64 * 125.0 + 100.0,
-                    canvas.height() as f64 / 3.5 + i as f64,
-                    PLANE_SIZE,
+                Square::new(
+                    -i as f64 * 75.0 + 50.0,
+                    canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
                     PLANE_SIZE,
                 ),
                 50,
             ));
         }
-        let mut towers = Vec::new();
+        // for i in 0..50 {
+        //     planes.push(PaperPlane::new(
+        //         Square::new(
+        //             -i as f64 * 125.0 + 100.0,
+        //             canvas.height() as f64 / 3.5 + i as f64,
+        //             PLANE_SIZE,
+        //         ),
+        //         50,
+        //     ));
+        // }
+        let mut towers = Vec::with_capacity(2);
         for i in 0..2 {
             towers.push(Tower::new(
-                Rect::new(
+                Square::new(
                     500.0 + i as f64 * 1000.0,
                     canvas.height() as f64 / 2.0,
-                    TOWER_SIZE,
                     TOWER_SIZE,
                 ),
                 15,
@@ -155,7 +163,7 @@ impl Game {
                     &self.ctx,
                     self.sprites.get("WaterGunBase").unwrap(),
                     self.sprites.get("WaterGunTop").unwrap(),
-                    self.sprites.get("WaterGunShooting").unwrap(),
+                    self.sprites.get("WaterGunBlast").unwrap(),
                 )
                 .expect("tower draw");
             for plane in self.planes.iter_mut() {
@@ -213,12 +221,17 @@ impl Game {
             self.canvas.height().into(),
         );
 
-        if self.mouse_up {
+        if self.mouse_up && self.cash > 20 {
             self.towers.push(Tower::new(
-                Rect::new(self.mouse_x, self.mouse_y, TOWER_SIZE, TOWER_SIZE),
+                Square::new(
+                    self.mouse_x - TOWER_SIZE / 2.0,
+                    self.mouse_y - TOWER_SIZE / 2.0,
+                    TOWER_SIZE,
+                ),
                 15,
                 250.0,
             ));
+            self.cash -= 20;
         }
 
         self.render_text();

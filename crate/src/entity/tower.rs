@@ -7,19 +7,13 @@ use js_sys::Date;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::entity::PaperPlane;
-use crate::types::Rect;
+use crate::types::Square;
 
 #[wasm_bindgen]
 pub struct Tower {
-    x: f64,
-    y: f64,
-    w: f64,
-    h: f64,
+    size: f64,
     center_x: f64,
     center_y: f64,
-    top_x: f64,
-    top_y: f64,
-    top_size: f64,
     rotation: f64,
     dmg: i32,
     dmg_interval: f64,
@@ -29,20 +23,11 @@ pub struct Tower {
 
 #[wasm_bindgen]
 impl Tower {
-    pub fn new(rect: Rect, dmg: i32, range: f64) -> Self {
-        let center_x = rect.x + rect.w / 2.0;
-        let center_y = rect.y + rect.h / 2.0;
-        let top_size = rect.w * 1.75;
+    pub fn new(square: Square, dmg: i32, range: f64) -> Self {
         Self {
-            x: rect.x,
-            y: rect.y,
-            w: rect.w,
-            h: rect.h,
-            center_x,
-            center_y,
-            top_x: center_x - top_size / 2.0,
-            top_y: center_y - top_size / 2.0,
-            top_size: top_size,
+            size: square.size,
+            center_x: square.x + square.size / 2.0,
+            center_y: square.y + square.size / 2.0,
             rotation: 0.0,
             dmg,
             dmg_interval: 750.0,
@@ -51,14 +36,27 @@ impl Tower {
         }
     }
 
+    pub fn center_x(&self) -> f64 {
+        self.center_x
+    }
+    pub fn center_y(&self) -> f64 {
+        self.center_y
+    }
+
     pub fn damage(&mut self, plane: &mut PaperPlane) {
-        let dx = self.center_x - (plane.x() + plane.w() / 2.0);
-        let dy = self.center_y - (plane.y() + plane.h() / 2.0);
+        let dx = self.center_x - plane.center_x();
+        let dy = self.center_y - plane.center_y();
         let dist = (dx.powi(2) + dy.powi(2)).sqrt();
 
         if dist < self.range {
             if Date::now() - self.last_dmg_time > self.dmg_interval {
                 self.last_dmg_time = Date::now();
+
+                if plane.center_y() > self.center_y {
+                    self.rotation = PI - ((dx / dist).acos() + PI * 1.5);
+                } else {
+                    self.rotation = (dx / dist).acos() + PI * 1.5;
+                }
 
                 plane.take_damage(self.dmg);
             }
@@ -70,29 +68,40 @@ impl Tower {
         ctx: &CanvasRenderingContext2d,
         base_img: &HtmlImageElement,
         top_img: &HtmlImageElement,
-        firing_img: &HtmlImageElement,
+        blast_img: &HtmlImageElement,
     ) -> Result<(), JsValue> {
+        // draw tower base
+        let base_size = self.size * 1.25;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            base_img, self.x, self.y, self.w, self.h,
+            base_img,
+            self.center_x - base_size / 2.0,
+            self.center_y - base_size / 2.5,
+            base_size,
+            base_size,
         )?;
 
+        // draw top image
+        ctx.translate(self.center_x, self.center_y)?;
+        ctx.rotate(self.rotation)?;
         if Date::now() - self.last_dmg_time < 100.0 {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                firing_img,
-                self.top_x,
-                self.top_y,
-                self.top_size,
-                self.top_size,
-            )?;
-        } else {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                top_img,
-                self.top_x,
-                self.top_y,
-                self.top_size,
-                self.top_size,
+                blast_img,
+                -self.size / 2.0,
+                -self.size * 1.4,
+                self.size,
+                self.size,
             )?;
         }
+        ctx.draw_image_with_html_image_element_and_dw_and_dh(
+            top_img,
+            -self.size / 2.0,
+            -self.size / 2.0,
+            self.size,
+            self.size,
+        )?;
+        ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
+
+        // temp tower range
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.ellipse(
@@ -106,6 +115,7 @@ impl Tower {
         )?;
         ctx.stroke();
         ctx.close_path();
+
         Ok(())
     }
 }
