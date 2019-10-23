@@ -15,7 +15,6 @@ pub struct PaperPlane {
     max_hp: u32,
 }
 
-#[wasm_bindgen]
 impl PaperPlane {
     pub fn new(square: Square, hp: i32) -> Self {
         Self {

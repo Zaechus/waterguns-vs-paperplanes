@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{prelude::*, JsCast};
 
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
-use crate::entity::*;
-use crate::types::Square;
-use crate::utils::set_panic_hook;
+use crate::{
+    entity::{PaperPlane, Tower},
+    types::{Mouse, Square},
+    utils::set_panic_hook,
+};
 
 const PLANE_SIZE: f64 = 50.0;
 const TOWER_SIZE: f64 = 75.0;
@@ -16,10 +17,7 @@ const TOWER_SIZE: f64 = 75.0;
 pub struct Game {
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
-    mouse_x: f64,
-    mouse_y: f64,
-    mouse_down: bool,
-    mouse_up: bool,
+    mouse: Mouse,
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
@@ -115,10 +113,7 @@ impl Game {
         Self {
             canvas,
             ctx,
-            mouse_down: false,
-            mouse_up: false,
-            mouse_x: 0.0,
-            mouse_y: 0.0,
+            mouse: Mouse::new(),
             sprites,
             planes,
             towers,
@@ -138,7 +133,10 @@ impl Game {
             .expect("display cash");
         self.ctx
             .fill_text(
-                &format!("X, Y: {}, {}", self.mouse_x, self.mouse_y),
+                &format!(
+                    "X, Y: {}, {}, {}, {}",
+                    self.mouse.x, self.mouse.y, self.mouse.down, self.mouse.up
+                ),
                 10.0,
                 120.0,
             )
@@ -148,6 +146,7 @@ impl Game {
 
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
+            tower.events(&self.mouse);
             tower
                 .draw(
                     &self.ctx,
@@ -188,13 +187,6 @@ impl Game {
         }
     }
 
-    fn update_mouse(&mut self, x: f64, y: f64, mouse_down: bool, mouse_up: bool) {
-        self.mouse_x = x;
-        self.mouse_y = y;
-        self.mouse_down = mouse_down;
-        self.mouse_up = mouse_up;
-    }
-
     pub fn draw(
         &mut self,
         mouse_x: f64,
@@ -202,7 +194,7 @@ impl Game {
         mouse_down: bool,
         mouse_up: bool,
     ) -> Result<(), JsValue> {
-        self.update_mouse(mouse_x, mouse_y, mouse_down, mouse_up);
+        self.mouse.update(mouse_x, mouse_y, mouse_down, mouse_up);
 
         self.ctx.clear_rect(
             0.0,
@@ -211,18 +203,18 @@ impl Game {
             self.canvas.height().into(),
         );
 
-        if self.mouse_up && self.cash >= 20 {
-            self.towers.push(Tower::new(
-                Square::new(
-                    self.mouse_x - TOWER_SIZE / 2.0,
-                    self.mouse_y - TOWER_SIZE / 2.0,
-                    TOWER_SIZE,
-                ),
-                15,
-                250.0,
-            ));
-            self.cash -= 20;
-        }
+        // if self.mouse.up && self.cash >= 20 {
+        //     self.towers.push(Tower::new(
+        //         Square::new(
+        //             self.mouse.x - TOWER_SIZE / 2.0,
+        //             self.mouse.y - TOWER_SIZE / 2.0,
+        //             TOWER_SIZE,
+        //         ),
+        //         15,
+        //         250.0,
+        //     ));
+        //     self.cash -= 20;
+        // }
 
         self.render_text();
 

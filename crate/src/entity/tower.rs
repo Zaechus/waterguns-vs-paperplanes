@@ -4,13 +4,17 @@ use wasm_bindgen::prelude::*;
 
 use js_sys::Date;
 
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::entity::PaperPlane;
-use crate::types::Square;
+use crate::{
+    entity::PaperPlane,
+    types::{Mouse, Square},
+};
 
 #[wasm_bindgen]
 pub struct Tower {
+    x: f64,
+    y: f64,
     size: f64,
     center_x: f64,
     center_y: f64,
@@ -19,12 +23,14 @@ pub struct Tower {
     dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,
+    context_open: bool,
 }
 
-#[wasm_bindgen]
 impl Tower {
     pub fn new(square: Square, dmg: i32, range: f64) -> Self {
         Self {
+            x: square.x,
+            y: square.y,
             size: square.size,
             center_x: square.x + square.size / 2.0,
             center_y: square.y + square.size / 2.0,
@@ -33,6 +39,7 @@ impl Tower {
             dmg_interval: 750.0,
             range,
             last_dmg_time: 0.0,
+            context_open: false,
         }
     }
 
@@ -116,6 +123,27 @@ impl Tower {
         ctx.stroke();
         ctx.close_path();
 
+        if self.context_open {
+            ctx.begin_path();
+            ctx.set_stroke_style(&JsValue::from_str("#ff00ff"));
+            ctx.rect(self.x, self.y, self.size, self.size);
+            ctx.stroke();
+            ctx.close_path();
+        }
+
         Ok(())
+    }
+
+    pub fn events(&mut self, mouse: &Mouse) {
+        if mouse.up {
+            if mouse.x > self.x
+                && mouse.y > self.y
+                && mouse.x < self.x + self.size
+                && mouse.y < self.y + self.size
+            {
+                console::log_1(&JsValue::from("CLICKED IN"));
+                self.context_open = !self.context_open;
+            }
+        }
     }
 }
