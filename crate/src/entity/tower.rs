@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 use js_sys::Date;
 
-use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     entity::PaperPlane,
@@ -23,6 +23,7 @@ pub struct Tower {
     dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,
+    mouse_over: bool,
     context_open: bool,
 }
 
@@ -32,13 +33,14 @@ impl Tower {
             x: square.x,
             y: square.y,
             size: square.size,
-            center_x: square.x + square.size / 2.0,
-            center_y: square.y + square.size / 2.0,
+            center_x: square.x + square.size * 0.5,
+            center_y: square.y + square.size * 0.5,
             rotation: 0.0,
             dmg,
             dmg_interval: 750.0,
             range,
             last_dmg_time: 0.0,
+            mouse_over: false,
             context_open: false,
         }
     }
@@ -81,7 +83,7 @@ impl Tower {
         let base_size = self.size * 1.25;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             base_img,
-            self.center_x - base_size / 2.0,
+            self.center_x - base_size * 0.5,
             self.center_y - base_size / 2.5,
             base_size,
             base_size,
@@ -93,7 +95,7 @@ impl Tower {
         if Date::now() - self.last_dmg_time < 100.0 {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
                 blast_img,
-                -self.size / 2.0,
+                -self.size * 0.5,
                 -self.size * 1.4,
                 self.size,
                 self.size,
@@ -101,8 +103,8 @@ impl Tower {
         }
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             top_img,
-            -self.size / 2.0,
-            -self.size / 2.0,
+            -self.size * 0.5,
+            -self.size * 0.5,
             self.size,
             self.size,
         )?;
@@ -123,11 +125,37 @@ impl Tower {
         ctx.stroke();
         ctx.close_path();
 
+        // temp tower range
+        if self.mouse_over {
+            ctx.begin_path();
+            ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
+            ctx.ellipse(
+                self.center_x,
+                self.center_y,
+                self.size,
+                self.size,
+                PI * 0.25,
+                0.0,
+                PI * 2.0,
+            )?;
+            ctx.stroke();
+            ctx.close_path();
+        }
+
+        // TODO menu
         if self.context_open {
             ctx.begin_path();
-            ctx.set_stroke_style(&JsValue::from_str("#ff00ff"));
-            ctx.rect(self.x, self.y, self.size, self.size);
-            ctx.stroke();
+            ctx.set_fill_style(&JsValue::from_str("#222222"));
+            ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
+            ctx.fill();
+            ctx.set_fill_style(&JsValue::from_str("#00ff00"));
+            ctx.set_font(&format!("{}px sans-serif", self.size * 0.2));
+            ctx.fill_text(
+                "Upgrade",
+                self.x + self.size * 0.07,
+                self.y - self.size * 0.3,
+            )
+            .expect("display upgrade");
             ctx.close_path();
         }
 
@@ -135,14 +163,24 @@ impl Tower {
     }
 
     pub fn events(&mut self, mouse: &Mouse) {
+        if mouse.x > self.x
+            && mouse.y > self.y
+            && mouse.x < self.x + self.size
+            && mouse.y < self.y + self.size
+        {
+            self.mouse_over = true;
+        } else {
+            self.mouse_over = false;
+        }
         if mouse.up {
-            if mouse.x > self.x
-                && mouse.y > self.y
-                && mouse.x < self.x + self.size
-                && mouse.y < self.y + self.size
-            {
-                console::log_1(&JsValue::from("CLICKED IN"));
+            if self.mouse_over {
                 self.context_open = !self.context_open;
+            } else if mouse.x < self.x - self.size
+                || mouse.y < self.y - self.size
+                || mouse.x > self.x + self.size * 2.0
+                || mouse.y > self.y + self.size * 2.0
+            {
+                self.context_open = false;
             }
         }
     }

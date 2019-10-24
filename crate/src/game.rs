@@ -15,6 +15,7 @@ const TOWER_SIZE: f64 = 75.0;
 
 #[wasm_bindgen]
 pub struct Game {
+    ui_text_size: f64,
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
     mouse: Mouse,
@@ -111,6 +112,7 @@ impl Game {
             ));
         }
         Self {
+            ui_text_size: canvas.width() as f64 * 0.015,
             canvas,
             ctx,
             mouse: Mouse::new(),
@@ -125,6 +127,8 @@ impl Game {
     fn render_text(&self) {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#000000"));
+        self.ctx
+            .set_font(&format!("{}px sans-serif", self.ui_text_size));
         self.ctx
             .fill_text(&format!("HP: {}", self.hp), 10.0, 40.0)
             .expect("display hp");
