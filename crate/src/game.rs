@@ -73,20 +73,25 @@ impl Game {
         plane_image.set_src("static/plane.png");
         sprites.insert(String::from("plane"), plane_image);
 
-        let watergun_image =
+        let watergun_base =
             HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBase image");
-        watergun_image.set_src("static/WaterGunBase.png");
-        sprites.insert(String::from("WaterGunBase"), watergun_image);
+        watergun_base.set_src("static/WaterGunBase.png");
+        sprites.insert(String::from("WaterGunBase"), watergun_base);
 
-        let watergun_image =
+        let watergun_top =
             HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunTop image");
-        watergun_image.set_src("static/WaterGunTop.png");
-        sprites.insert(String::from("WaterGunTop"), watergun_image);
+        watergun_top.set_src("static/WaterGunTop.png");
+        sprites.insert(String::from("WaterGunTop"), watergun_top);
 
-        let watergun_shooting_image =
+        let watergun_blast =
             HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBlast image");
-        watergun_shooting_image.set_src("static/WaterGunBlast.png");
-        sprites.insert(String::from("WaterGunBlast"), watergun_shooting_image);
+        watergun_blast.set_src("static/WaterGunBlast.png");
+        sprites.insert(String::from("WaterGunBlast"), watergun_blast);
+
+        let acidtower_top =
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop image");
+        acidtower_top.set_src("static/AcidTowerTop.png");
+        sprites.insert(String::from("AcidTowerTop"), acidtower_top);
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
@@ -100,17 +105,18 @@ impl Game {
             ));
         }
         let mut towers = Vec::with_capacity(2);
-        for i in 0..2 {
-            towers.push(Tower::new(
-                Square::new(
-                    500.0 + i as f64 * 1000.0,
-                    canvas.height() as f64 / 2.0,
-                    TOWER_SIZE,
-                ),
-                15,
-                250.0,
-            ));
-        }
+
+        towers.push(Tower::new_water_gun(Square::new(
+            500.0,
+            canvas.height() as f64 / 2.0,
+            TOWER_SIZE,
+        )));
+        towers.push(Tower::new_acid_tower(Square::new(
+            1500.0,
+            canvas.height() as f64 / 2.0,
+            TOWER_SIZE,
+        )));
+
         Self {
             ui_text_size: canvas.width() as f64 * 0.015,
             canvas,
@@ -151,14 +157,7 @@ impl Game {
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
             tower.events(&self.mouse);
-            tower
-                .draw(
-                    &self.ctx,
-                    self.sprites.get("WaterGunBase").unwrap(),
-                    self.sprites.get("WaterGunTop").unwrap(),
-                    self.sprites.get("WaterGunBlast").unwrap(),
-                )
-                .expect("tower draw");
+            tower.draw(&self.ctx, &self.sprites).expect("tower draw");
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
             }

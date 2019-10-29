@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::{collections::HashMap, f64::consts::PI};
 
 use wasm_bindgen::prelude::*;
 
@@ -19,16 +19,22 @@ pub struct Tower {
     center_x: f64,
     center_y: f64,
     rotation: f64,
+
+    base_img: String,
+    blast_img: String,
+    top_img: String,
+
     dmg: i32,
     dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,
+
     mouse_over: bool,
     context_open: bool,
 }
 
 impl Tower {
-    pub fn new(square: Square, dmg: i32, range: f64) -> Self {
+    pub fn new_water_gun(square: Square) -> Self {
         Self {
             x: square.x,
             y: square.y,
@@ -36,9 +42,52 @@ impl Tower {
             center_x: square.x + square.size * 0.5,
             center_y: square.y + square.size * 0.5,
             rotation: 0.0,
-            dmg,
+            base_img: String::from("WaterGunBase"),
+            blast_img: String::from("WaterGunBlast"),
+            top_img: String::from("WaterGunTop"),
+            dmg: 15,
             dmg_interval: 750.0,
-            range,
+            range: 200.0,
+            last_dmg_time: 0.0,
+            mouse_over: false,
+            context_open: false,
+        }
+    }
+
+    pub fn new_acid_tower(square: Square) -> Self {
+        Self {
+            x: square.x,
+            y: square.y,
+            size: square.size,
+            center_x: square.x + square.size * 0.5,
+            center_y: square.y + square.size * 0.5,
+            rotation: 0.0,
+            base_img: String::from("WaterGunBase"),
+            blast_img: String::from("WaterGunBlast"),
+            top_img: String::from("AcidTowerTop"),
+            dmg: 15,
+            dmg_interval: 750.0,
+            range: 150.0,
+            last_dmg_time: 0.0,
+            mouse_over: false,
+            context_open: false,
+        }
+    }
+
+    pub fn new_soda_maker(square: Square) -> Self {
+        Self {
+            x: square.x,
+            y: square.y,
+            size: square.size,
+            center_x: square.x + square.size * 0.5,
+            center_y: square.y + square.size * 0.5,
+            rotation: 0.0,
+            base_img: String::from("WaterGunBase"),
+            blast_img: String::from("WaterGunBlast"),
+            top_img: String::from("SodaMakerTop"),
+            dmg: 15,
+            dmg_interval: 1000.0,
+            range: 250.0,
             last_dmg_time: 0.0,
             mouse_over: false,
             context_open: false,
@@ -75,14 +124,12 @@ impl Tower {
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
-        base_img: &HtmlImageElement,
-        top_img: &HtmlImageElement,
-        blast_img: &HtmlImageElement,
+        sprites: &HashMap<String, HtmlImageElement>,
     ) -> Result<(), JsValue> {
         // draw tower base
         let base_size = self.size * 1.25;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            base_img,
+            sprites.get(&self.base_img).unwrap(),
             self.center_x - base_size * 0.5,
             self.center_y - base_size / 2.5,
             base_size,
@@ -94,7 +141,7 @@ impl Tower {
         ctx.rotate(self.rotation)?;
         if Date::now() - self.last_dmg_time < 100.0 {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                blast_img,
+                sprites.get(&self.blast_img).unwrap(),
                 -self.size * 0.5,
                 -self.size * 1.4,
                 self.size,
@@ -102,7 +149,7 @@ impl Tower {
             )?;
         }
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            top_img,
+            sprites.get(&self.top_img).unwrap(),
             -self.size * 0.5,
             -self.size * 0.5,
             self.size,
