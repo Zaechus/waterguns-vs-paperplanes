@@ -69,29 +69,33 @@ impl Game {
 
         let mut sprites = HashMap::new();
 
-        let plane_image = HtmlImageElement::new_with_width_and_height(50, 50).expect("plane image");
-        plane_image.set_src("static/plane.png");
-        sprites.insert(String::from("plane"), plane_image);
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("plane image");
+        img.set_src("static/plane.png");
+        sprites.insert(String::from("plane"), img);
 
-        let watergun_base =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBase image");
-        watergun_base.set_src("static/WaterGunBase.png");
-        sprites.insert(String::from("WaterGunBase"), watergun_base);
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBase image");
+        img.set_src("static/WaterGunBase.png");
+        sprites.insert(String::from("WaterGunBase"), img);
 
-        let watergun_top =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunTop image");
-        watergun_top.set_src("static/WaterGunTop.png");
-        sprites.insert(String::from("WaterGunTop"), watergun_top);
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunTop image");
+        img.set_src("static/WaterGunTop.png");
+        sprites.insert(String::from("WaterGunTop"), img);
 
-        let watergun_blast =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBlast image");
-        watergun_blast.set_src("static/WaterGunBlast.png");
-        sprites.insert(String::from("WaterGunBlast"), watergun_blast);
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBlast image");
+        img.set_src("static/WaterGunBlast.png");
+        sprites.insert(String::from("WaterGunBlast"), img);
 
-        let acidtower_top =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop image");
-        acidtower_top.set_src("static/AcidTowerTop.png");
-        sprites.insert(String::from("AcidTowerTop"), acidtower_top);
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop image");
+        img.set_src("static/AcidTowerTop.png");
+        sprites.insert(String::from("AcidTowerTop"), img);
+
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop2 image");
+        img.set_src("static/AcidTowerTop2.png");
+        sprites.insert(String::from("AcidTowerTop2"), img);
+
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("SodaMakerTop image");
+        img.set_src("static/SodaMakerTop.png");
+        sprites.insert(String::from("SodaMakerTop"), img);
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
@@ -141,16 +145,16 @@ impl Game {
         self.ctx
             .fill_text(&format!("Cash: {}", self.cash), 10.0, 80.0)
             .expect("display cash");
-        self.ctx
-            .fill_text(
-                &format!(
-                    "X, Y: {}, {}, {}, {}",
-                    self.mouse.x, self.mouse.y, self.mouse.down, self.mouse.up
-                ),
-                10.0,
-                120.0,
-            )
-            .expect("display mouseXY");
+        // self.ctx
+        //     .fill_text(
+        //         &format!(
+        //             "X, Y: {}, {}, {}, {}",
+        //             self.mouse.x, self.mouse.y, self.mouse.down, self.mouse.up
+        //         ),
+        //         10.0,
+        //         120.0,
+        //     )
+        //     .expect("display mouseXY");
         self.ctx.close_path();
     }
 
@@ -190,6 +194,33 @@ impl Game {
         }
     }
 
+    fn render_top_bar(&self) -> Result<(), JsValue> {
+        self.ctx.begin_path();
+        self.ctx.set_fill_style(&JsValue::from_str("#555555"));
+        self.ctx.rect(
+            0.0,
+            0.0,
+            self.canvas.width() as f64,
+            self.canvas.height() as f64 * 0.1,
+        );
+        self.ctx.fill();
+        self.ctx.close_path();
+
+        let imgs = ["SodaMakerTop", "AcidTowerTop", "WaterGunTop"];
+        for x in 0..imgs.len() {
+            self.ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                self.sprites.get(imgs[x]).unwrap(),
+                self.canvas.width() as f64 - TOWER_SIZE * 1.5 * (x + 1) as f64,
+                5.0,
+                TOWER_SIZE,
+                TOWER_SIZE,
+            )?;
+        }
+
+        self.render_text();
+        Ok(())
+    }
+
     pub fn draw(
         &mut self,
         mouse_x: f64,
@@ -219,12 +250,12 @@ impl Game {
         //     self.cash -= 20;
         // }
 
-        self.render_text();
-
         self.render_towers();
 
         self.remove_planes();
         self.render_planes();
+
+        self.render_top_bar().expect("render top bar");
         Ok(())
     }
 }

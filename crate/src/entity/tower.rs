@@ -11,8 +11,21 @@ use crate::{
     types::{Mouse, Square},
 };
 
+enum TowerType {
+    WaterGun,
+    AcidTower(AcidTower),
+    SodaMaker,
+}
+
+enum AcidTower {
+    Basic,
+    Radioactive,
+}
+
 #[wasm_bindgen]
 pub struct Tower {
+    variant: TowerType,
+
     x: f64,
     y: f64,
     size: f64,
@@ -36,6 +49,7 @@ pub struct Tower {
 impl Tower {
     pub fn new_water_gun(square: Square) -> Self {
         Self {
+            variant: TowerType::WaterGun,
             x: square.x,
             y: square.y,
             size: square.size,
@@ -45,8 +59,8 @@ impl Tower {
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("WaterGunTop"),
-            dmg: 15,
-            dmg_interval: 750.0,
+            dmg: 10,
+            dmg_interval: 700.0,
             range: 200.0,
             last_dmg_time: 0.0,
             mouse_over: false,
@@ -56,6 +70,7 @@ impl Tower {
 
     pub fn new_acid_tower(square: Square) -> Self {
         Self {
+            variant: TowerType::AcidTower(AcidTower::Basic),
             x: square.x,
             y: square.y,
             size: square.size,
@@ -76,6 +91,7 @@ impl Tower {
 
     pub fn new_soda_maker(square: Square) -> Self {
         Self {
+            variant: TowerType::SodaMaker,
             x: square.x,
             y: square.y,
             size: square.size,
@@ -85,7 +101,7 @@ impl Tower {
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("SodaMakerTop"),
-            dmg: 15,
+            dmg: 20,
             dmg_interval: 1000.0,
             range: 250.0,
             last_dmg_time: 0.0,
@@ -157,30 +173,29 @@ impl Tower {
         )?;
         ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
 
-        // temp tower range
-        ctx.begin_path();
-        ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
-        ctx.ellipse(
-            self.center_x,
-            self.center_y,
-            self.range,
-            self.range,
-            PI / 4.0,
-            0.0,
-            2.0 * PI,
-        )?;
-        ctx.stroke();
-        ctx.close_path();
-
-        // temp tower range
+        // Tower selection and range when mouseover
         if self.mouse_over {
+            ctx.begin_path();
+            ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
+            ctx.ellipse(
+                self.center_x,
+                self.center_y,
+                self.range,
+                self.range,
+                PI / 4.0,
+                0.0,
+                2.0 * PI,
+            )?;
+            ctx.stroke();
+            ctx.close_path();
+
             ctx.begin_path();
             ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
             ctx.ellipse(
                 self.center_x,
                 self.center_y,
-                self.size,
-                self.size,
+                self.size * 0.8,
+                self.size * 0.8,
                 PI * 0.25,
                 0.0,
                 PI * 2.0,
@@ -189,7 +204,7 @@ impl Tower {
             ctx.close_path();
         }
 
-        // TODO menu
+        // Context menu
         if self.context_open {
             ctx.begin_path();
             ctx.set_fill_style(&JsValue::from_str("#222222"));
@@ -228,7 +243,25 @@ impl Tower {
                 || mouse.y > self.y + self.size * 2.0
             {
                 self.context_open = false;
+            } else if mouse.x > self.x
+                && mouse.y > self.y - self.size * 0.6
+                && mouse.x < self.x + self.size
+                && mouse.y < self.y
+            {
+                // ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
+
+                match self.variant {
+                    TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(),
+                    _ => (),
+                }
             }
         }
+    }
+
+    fn upgrade_acid2(&mut self) {
+        self.top_img = String::from("AcidTowerTop2");
+        self.variant = TowerType::AcidTower(AcidTower::Radioactive);
+        self.range *= 1.2;
+        self.dmg += 10;
     }
 }
