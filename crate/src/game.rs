@@ -97,6 +97,15 @@ impl Game {
         img.set_src("static/SodaMakerTop.png");
         sprites.insert(String::from("SodaMakerTop"), img);
 
+        let img =
+            HtmlImageElement::new_with_width_and_height(50, 50).expect("SparklingWaterTop image");
+        img.set_src("static/SparklingWaterTop.png");
+        sprites.insert(String::from("SparklingWaterTop"), img);
+
+        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("RootBeerTop image");
+        img.set_src("static/RootBeerTop.png");
+        sprites.insert(String::from("RootBeerTop"), img);
+
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
             planes.push(PaperPlane::new(
