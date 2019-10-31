@@ -248,8 +248,6 @@ impl Tower {
                 && mouse.x < self.x + self.size
                 && mouse.y < self.y
             {
-                // ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
-
                 match self.variant {
                     TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(),
                     _ => (),

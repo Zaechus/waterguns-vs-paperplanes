@@ -13,6 +13,13 @@ use crate::{
 const PLANE_SIZE: f64 = 50.0;
 const TOWER_SIZE: f64 = 75.0;
 
+enum Selected {
+    WaterGun,
+    AcidTower,
+    SodaMaker,
+    None,
+}
+
 #[wasm_bindgen]
 pub struct Game {
     ui_text_size: f64,
@@ -24,6 +31,7 @@ pub struct Game {
     towers: Vec<Tower>,
     hp: i32,
     cash: i32,
+    selected: Selected,
 }
 
 #[wasm_bindgen]
@@ -140,6 +148,20 @@ impl Game {
             towers,
             hp: 100,
             cash: 0,
+            selected: Selected::None,
+        }
+    }
+
+    fn events(&mut self) {
+        if self.mouse.up {
+            if self.mouse.x > self.canvas.width() as f64 - TOWER_SIZE
+                && self.mouse.x < self.canvas.width() as f64
+                && self.mouse.y < self.canvas.height() as f64 * 0.1
+            {
+                self.selected = Selected::WaterGun;
+            } else {
+                self.selected = Selected::None;
+            }
         }
     }
 
@@ -154,16 +176,6 @@ impl Game {
         self.ctx
             .fill_text(&format!("Cash: {}", self.cash), 10.0, 80.0)
             .expect("display cash");
-        // self.ctx
-        //     .fill_text(
-        //         &format!(
-        //             "X, Y: {}, {}, {}, {}",
-        //             self.mouse.x, self.mouse.y, self.mouse.down, self.mouse.up
-        //         ),
-        //         10.0,
-        //         120.0,
-        //     )
-        //     .expect("display mouseXY");
         self.ctx.close_path();
     }
 
@@ -219,11 +231,24 @@ impl Game {
         for x in 0..imgs.len() {
             self.ctx.draw_image_with_html_image_element_and_dw_and_dh(
                 self.sprites.get(imgs[x]).unwrap(),
-                self.canvas.width() as f64 - TOWER_SIZE * 1.5 * (x + 1) as f64,
+                self.canvas.width() as f64 - TOWER_SIZE * (x + 1) as f64,
                 5.0,
                 TOWER_SIZE,
                 TOWER_SIZE,
             )?;
+        }
+
+        if let Selected::WaterGun = self.selected {
+            self.ctx.begin_path();
+            self.ctx.set_stroke_style(&JsValue::from_str("#000000"));
+            self.ctx.rect(
+                self.canvas.width() as f64 - TOWER_SIZE,
+                0.0,
+                TOWER_SIZE,
+                TOWER_SIZE,
+            );
+            self.ctx.stroke();
+            self.ctx.close_path();
         }
 
         self.render_text();
@@ -258,6 +283,8 @@ impl Game {
         //     ));
         //     self.cash -= 20;
         // }
+
+        self.events();
 
         self.render_towers();
 
