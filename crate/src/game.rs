@@ -5,7 +5,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
-    entity::{PaperPlane, Tower},
+    entity::{Button, PaperPlane, Tower},
     types::{Mouse, Square},
     utils::set_panic_hook,
 };
@@ -29,6 +29,7 @@ pub struct Game {
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
+    buttons: Vec<Button>,
     hp: i32,
     cash: i32,
     selected: Selected,
@@ -125,18 +126,38 @@ impl Game {
                 50,
             ));
         }
-        let mut towers = Vec::with_capacity(2);
 
-        towers.push(Tower::new_water_gun(Square::new(
-            500.0,
-            canvas.height() as f64 / 2.0,
-            TOWER_SIZE,
-        )));
-        towers.push(Tower::new_acid_tower(Square::new(
-            1500.0,
-            canvas.height() as f64 / 2.0,
-            TOWER_SIZE,
-        )));
+        let towers = vec![
+            Tower::new_water_gun(Square::new(500.0, canvas.height() as f64 / 2.0, TOWER_SIZE)),
+            Tower::new_acid_tower(Square::new(
+                1500.0,
+                canvas.height() as f64 / 2.0,
+                TOWER_SIZE,
+            )),
+        ];
+
+        let buttons = vec![
+            Button::new(
+                Square::new(canvas.width() as f64 - 5.0 - TOWER_SIZE, 0.0, TOWER_SIZE),
+                "WaterGunTop",
+            ),
+            Button::new(
+                Square::new(
+                    canvas.width() as f64 - 5.0 - TOWER_SIZE * 2.0,
+                    0.0,
+                    TOWER_SIZE,
+                ),
+                "AcidTowerTop",
+            ),
+            Button::new(
+                Square::new(
+                    canvas.width() as f64 - 5.0 - TOWER_SIZE * 3.0,
+                    0.0,
+                    TOWER_SIZE,
+                ),
+                "SodaMakerTop",
+            ),
+        ];
 
         Self {
             ui_text_size: canvas.width() as f64 * 0.015,
@@ -146,6 +167,7 @@ impl Game {
             sprites,
             planes,
             towers,
+            buttons,
             hp: 100,
             cash: 0,
             selected: Selected::None,
@@ -154,14 +176,48 @@ impl Game {
 
     fn events(&mut self) {
         if self.mouse.up {
-            if self.mouse.x > self.canvas.width() as f64 - TOWER_SIZE
+            let selection = if self.mouse.x > self.canvas.width() as f64 - TOWER_SIZE
                 && self.mouse.x < self.canvas.width() as f64
-                && self.mouse.y < self.canvas.height() as f64 * 0.1
+                && self.mouse.y < TOWER_SIZE
             {
-                self.selected = Selected::WaterGun;
+                Selected::WaterGun
             } else {
-                self.selected = Selected::None;
+                Selected::None
+            };
+            match self.selected {
+                Selected::WaterGun => {
+                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                        self.towers.push(Tower::new_water_gun(Square::new(
+                            self.mouse.x - TOWER_SIZE / 2.0,
+                            self.mouse.y - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
+                        )));
+                        self.cash -= 20;
+                    }
+                }
+                Selected::AcidTower => {
+                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                        self.towers.push(Tower::new_acid_tower(Square::new(
+                            self.mouse.x - TOWER_SIZE / 2.0,
+                            self.mouse.y - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
+                        )));
+                        self.cash -= 20;
+                    }
+                }
+                Selected::SodaMaker => {
+                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                        self.towers.push(Tower::new_soda_maker(Square::new(
+                            self.mouse.x - TOWER_SIZE / 2.0,
+                            self.mouse.y - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
+                        )));
+                        self.cash -= 20;
+                    }
+                }
+                _ => (),
             }
+            self.selected = selection;
         }
     }
 
@@ -218,34 +274,23 @@ impl Game {
     fn render_top_bar(&self) -> Result<(), JsValue> {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#555555"));
-        self.ctx.rect(
-            0.0,
-            0.0,
-            self.canvas.width() as f64,
-            self.canvas.height() as f64 * 0.1,
-        );
+        self.ctx
+            .rect(0.0, 0.0, self.canvas.width() as f64, TOWER_SIZE + 10.0);
         self.ctx.fill();
         self.ctx.close_path();
 
-        let imgs = ["SodaMakerTop", "AcidTowerTop", "WaterGunTop"];
-        for x in 0..imgs.len() {
-            self.ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                self.sprites.get(imgs[x]).unwrap(),
-                self.canvas.width() as f64 - TOWER_SIZE * (x + 1) as f64,
-                5.0,
-                TOWER_SIZE,
-                TOWER_SIZE,
-            )?;
+        for button in self.buttons.iter() {
+            button.draw(&self.ctx, &self.sprites)?;
         }
 
         if let Selected::WaterGun = self.selected {
             self.ctx.begin_path();
             self.ctx.set_stroke_style(&JsValue::from_str("#000000"));
             self.ctx.rect(
-                self.canvas.width() as f64 - TOWER_SIZE,
+                self.canvas.width() as f64 - TOWER_SIZE - 5.0,
                 0.0,
                 TOWER_SIZE,
-                TOWER_SIZE,
+                TOWER_SIZE + 9.0,
             );
             self.ctx.stroke();
             self.ctx.close_path();
@@ -270,19 +315,6 @@ impl Game {
             self.canvas.width().into(),
             self.canvas.height().into(),
         );
-
-        // if self.mouse.up && self.cash >= 20 {
-        //     self.towers.push(Tower::new(
-        //         Square::new(
-        //             self.mouse.x - TOWER_SIZE / 2.0,
-        //             self.mouse.y - TOWER_SIZE / 2.0,
-        //             TOWER_SIZE,
-        //         ),
-        //         15,
-        //         250.0,
-        //     ));
-        //     self.cash -= 20;
-        // }
 
         self.events();
 

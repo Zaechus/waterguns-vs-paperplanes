@@ -137,6 +137,56 @@ impl Tower {
         }
     }
 
+    fn draw_range(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
+        ctx.ellipse(
+            self.center_x,
+            self.center_y,
+            self.range,
+            self.range,
+            PI / 4.0,
+            0.0,
+            2.0 * PI,
+        )?;
+        ctx.stroke();
+        ctx.close_path();
+        Ok(())
+    }
+
+    fn draw_selection(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
+        ctx.ellipse(
+            self.center_x,
+            self.center_y,
+            self.size * 0.8,
+            self.size * 0.8,
+            PI * 0.25,
+            0.0,
+            PI * 2.0,
+        )?;
+        ctx.stroke();
+        ctx.close_path();
+        Ok(())
+    }
+
+    fn draw_context_menu(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_fill_style(&JsValue::from_str("#222222"));
+        ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
+        ctx.fill();
+        ctx.set_fill_style(&JsValue::from_str("#00ff00"));
+        ctx.set_font(&format!("{}px monospace", self.size * 0.2));
+        ctx.fill_text(
+            "Upgrade",
+            self.x + self.size * 0.07,
+            self.y - self.size * 0.3,
+        )?;
+        ctx.close_path();
+        Ok(())
+    }
+
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
@@ -152,7 +202,7 @@ impl Tower {
             base_size,
         )?;
 
-        // draw top image
+        // draw top sprite with potential blast sprite
         ctx.translate(self.center_x, self.center_y)?;
         ctx.rotate(self.rotation)?;
         if Date::now() - self.last_dmg_time < 100.0 {
@@ -173,52 +223,16 @@ impl Tower {
         )?;
         ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
 
-        // Tower selection and range when mouseover
         if self.mouse_over {
-            ctx.begin_path();
-            ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
-            ctx.ellipse(
-                self.center_x,
-                self.center_y,
-                self.range,
-                self.range,
-                PI / 4.0,
-                0.0,
-                2.0 * PI,
-            )?;
-            ctx.stroke();
-            ctx.close_path();
+            self.draw_range(ctx)?;
 
-            ctx.begin_path();
-            ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
-            ctx.ellipse(
-                self.center_x,
-                self.center_y,
-                self.size * 0.8,
-                self.size * 0.8,
-                PI * 0.25,
-                0.0,
-                PI * 2.0,
-            )?;
-            ctx.stroke();
-            ctx.close_path();
+            self.draw_selection(ctx)?;
         }
 
-        // Context menu
         if self.context_open {
-            ctx.begin_path();
-            ctx.set_fill_style(&JsValue::from_str("#222222"));
-            ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
-            ctx.fill();
-            ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-            ctx.set_font(&format!("{}px sans-serif", self.size * 0.2));
-            ctx.fill_text(
-                "Upgrade",
-                self.x + self.size * 0.07,
-                self.y - self.size * 0.3,
-            )
-            .expect("display upgrade");
-            ctx.close_path();
+            self.draw_selection(ctx)?;
+
+            self.draw_context_menu(ctx)?;
         }
 
         Ok(())
