@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[derive(Debug)]
 pub struct Mouse {
     pub x: f64,
     pub y: f64,

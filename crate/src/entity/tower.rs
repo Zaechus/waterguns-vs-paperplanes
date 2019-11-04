@@ -7,19 +7,29 @@ use js_sys::Date;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
-    entity::PaperPlane,
-    types::{Mouse, Square},
+    entity::{Button, PaperPlane},
+    types::{Mouse, Selected, Square},
 };
 
-enum TowerType {
-    WaterGun,
-    AcidTower(AcidTower),
-    SodaMaker,
+enum WaterGun {
+    Basic,
+    SuperSoaker,
 }
 
 enum AcidTower {
     Basic,
     Radioactive,
+}
+enum SodaMaker {
+    Basic,
+    SparklingWater,
+    RootBeer,
+}
+
+enum TowerType {
+    WaterGun(WaterGun),
+    AcidTower(AcidTower),
+    SodaMaker(SodaMaker),
 }
 
 #[wasm_bindgen]
@@ -37,6 +47,8 @@ pub struct Tower {
     blast_img: String,
     top_img: String,
 
+    upgrade_button: Button,
+
     dmg: i32,
     dmg_interval: f64,
     range: f64,
@@ -49,7 +61,7 @@ pub struct Tower {
 impl Tower {
     pub fn new_water_gun(square: Square) -> Self {
         Self {
-            variant: TowerType::WaterGun,
+            variant: TowerType::WaterGun(WaterGun::Basic),
             x: square.x,
             y: square.y,
             size: square.size,
@@ -59,6 +71,11 @@ impl Tower {
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("WaterGunTop"),
+            upgrade_button: Button::new(
+                Square::new(square.x, square.y - square.size * 0.6, square.size),
+                Selected::None,
+                "Upgrade",
+            ),
             dmg: 10,
             dmg_interval: 700.0,
             range: 200.0,
@@ -80,6 +97,11 @@ impl Tower {
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("AcidTowerTop"),
+            upgrade_button: Button::new(
+                Square::new(square.x, square.y - square.size * 0.6, square.size),
+                Selected::None,
+                "Upgrade",
+            ),
             dmg: 15,
             dmg_interval: 750.0,
             range: 150.0,
@@ -91,7 +113,7 @@ impl Tower {
 
     pub fn new_soda_maker(square: Square) -> Self {
         Self {
-            variant: TowerType::SodaMaker,
+            variant: TowerType::SodaMaker(SodaMaker::Basic),
             x: square.x,
             y: square.y,
             size: square.size,
@@ -101,6 +123,11 @@ impl Tower {
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("SodaMakerTop"),
+            upgrade_button: Button::new(
+                Square::new(square.x, square.y - square.size * 0.6, square.size),
+                Selected::None,
+                "Upgrade",
+            ),
             dmg: 20,
             dmg_interval: 1000.0,
             range: 250.0,
@@ -171,22 +198,6 @@ impl Tower {
         Ok(())
     }
 
-    fn draw_context_menu(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
-        ctx.begin_path();
-        ctx.set_fill_style(&JsValue::from_str("#222222"));
-        ctx.rect(self.x, self.y - self.size * 0.6, self.size, self.size * 0.5);
-        ctx.fill();
-        ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-        ctx.set_font(&format!("{}px monospace", self.size * 0.2));
-        ctx.fill_text(
-            "Upgrade",
-            self.x + self.size * 0.07,
-            self.y - self.size * 0.3,
-        )?;
-        ctx.close_path();
-        Ok(())
-    }
-
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
@@ -232,7 +243,7 @@ impl Tower {
         if self.context_open {
             self.draw_selection(ctx)?;
 
-            self.draw_context_menu(ctx)?;
+            self.upgrade_button.draw(ctx, sprites)?;
         }
 
         Ok(())
@@ -263,16 +274,38 @@ impl Tower {
                 && mouse.y < self.y
             {
                 match self.variant {
+                    TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(),
                     TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(),
+                    TowerType::SodaMaker(SodaMaker::Basic) => self.upgrade_soda2(),
+                    TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(),
                     _ => (),
                 }
             }
         }
     }
 
+    fn upgrade_water2(&mut self) {
+        self.top_img = String::from("SuperSoakerTop");
+        self.variant = TowerType::WaterGun(WaterGun::SuperSoaker);
+        self.range *= 1.2;
+        self.dmg += 10;
+    }
     fn upgrade_acid2(&mut self) {
         self.top_img = String::from("AcidTowerTop2");
         self.variant = TowerType::AcidTower(AcidTower::Radioactive);
+        self.range *= 1.2;
+        self.dmg += 10;
+    }
+    fn upgrade_soda2(&mut self) {
+        self.top_img = String::from("SparklingWaterTop");
+        self.variant = TowerType::SodaMaker(SodaMaker::SparklingWater);
+        self.range *= 1.2;
+        self.dmg += 10;
+    }
+    fn upgrade_soda3(&mut self) {
+        self.top_img = String::from("RootBeerTop");
+        self.blast_img = String::from("RootBeerBlast");
+        self.variant = TowerType::SodaMaker(SodaMaker::RootBeer);
         self.range *= 1.2;
         self.dmg += 10;
     }

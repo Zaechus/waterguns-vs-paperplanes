@@ -6,19 +6,12 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{Mouse, Square},
+    types::{Mouse, Selected, Square},
     utils::set_panic_hook,
 };
 
 const PLANE_SIZE: f64 = 50.0;
 const TOWER_SIZE: f64 = 75.0;
-
-enum Selected {
-    WaterGun,
-    AcidTower,
-    SodaMaker,
-    None,
-}
 
 #[wasm_bindgen]
 pub struct Game {
@@ -78,42 +71,49 @@ impl Game {
 
         let mut sprites = HashMap::new();
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("plane image");
-        img.set_src("static/plane.png");
-        sprites.insert(String::from("plane"), img);
+        let img = HtmlImageElement::new().expect("Plane image");
+        img.set_src("static/Plane.png");
+        sprites.insert(String::from("Plane"), img);
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBase image");
-        img.set_src("static/WaterGunBase.png");
-        sprites.insert(String::from("WaterGunBase"), img);
-
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunTop image");
-        img.set_src("static/WaterGunTop.png");
-        sprites.insert(String::from("WaterGunTop"), img);
-
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("WaterGunBlast image");
+        let img = HtmlImageElement::new().expect("WaterGunBlast image");
         img.set_src("static/WaterGunBlast.png");
         sprites.insert(String::from("WaterGunBlast"), img);
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop image");
+        let img = HtmlImageElement::new().expect("WaterGunBase image");
+        img.set_src("static/WaterGunBase.png");
+        sprites.insert(String::from("WaterGunBase"), img);
+
+        let img = HtmlImageElement::new().expect("WaterGunTop image");
+        img.set_src("static/WaterGunTop.png");
+        sprites.insert(String::from("WaterGunTop"), img);
+
+        let img = HtmlImageElement::new().expect("SuperSoakerTop image");
+        img.set_src("static/SuperSoakerTop.png");
+        sprites.insert(String::from("SuperSoakerTop"), img);
+
+        let img = HtmlImageElement::new().expect("AcidTowerTop image");
         img.set_src("static/AcidTowerTop.png");
         sprites.insert(String::from("AcidTowerTop"), img);
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("AcidTowerTop2 image");
+        let img = HtmlImageElement::new().expect("AcidTowerTop2 image");
         img.set_src("static/AcidTowerTop2.png");
         sprites.insert(String::from("AcidTowerTop2"), img);
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("SodaMakerTop image");
+        let img = HtmlImageElement::new().expect("SodaMakerTop image");
         img.set_src("static/SodaMakerTop.png");
         sprites.insert(String::from("SodaMakerTop"), img);
 
-        let img =
-            HtmlImageElement::new_with_width_and_height(50, 50).expect("SparklingWaterTop image");
+        let img = HtmlImageElement::new().expect("SparklingWaterTop image");
         img.set_src("static/SparklingWaterTop.png");
         sprites.insert(String::from("SparklingWaterTop"), img);
 
-        let img = HtmlImageElement::new_with_width_and_height(50, 50).expect("RootBeerTop image");
+        let img = HtmlImageElement::new().expect("RootBeerTop image");
         img.set_src("static/RootBeerTop.png");
         sprites.insert(String::from("RootBeerTop"), img);
+
+        let img = HtmlImageElement::new().expect("RootBeerBlast image");
+        img.set_src("static/RootBeerBlast.png");
+        sprites.insert(String::from("RootBeerBlast"), img);
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
@@ -139,6 +139,7 @@ impl Game {
         let buttons = vec![
             Button::new(
                 Square::new(canvas.width() as f64 - 5.0 - TOWER_SIZE, 0.0, TOWER_SIZE),
+                Selected::WaterGun,
                 "WaterGunTop",
             ),
             Button::new(
@@ -147,6 +148,7 @@ impl Game {
                     0.0,
                     TOWER_SIZE,
                 ),
+                Selected::AcidTower,
                 "AcidTowerTop",
             ),
             Button::new(
@@ -155,6 +157,7 @@ impl Game {
                     0.0,
                     TOWER_SIZE,
                 ),
+                Selected::SodaMaker,
                 "SodaMakerTop",
             ),
         ];
@@ -176,14 +179,14 @@ impl Game {
 
     fn events(&mut self) {
         if self.mouse.up {
-            let selection = if self.mouse.x > self.canvas.width() as f64 - TOWER_SIZE
-                && self.mouse.x < self.canvas.width() as f64
-                && self.mouse.y < TOWER_SIZE
-            {
-                Selected::WaterGun
-            } else {
-                Selected::None
-            };
+            let mut selection = Selected::None;
+            if self.mouse.y < TOWER_SIZE {
+                for button in self.buttons.iter() {
+                    if self.mouse.x > button.x() && self.mouse.x < button.x() + button.size() {
+                        selection = button.select();
+                    }
+                }
+            }
             match self.selected {
                 Selected::WaterGun => {
                     if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
@@ -265,8 +268,8 @@ impl Game {
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
             plane
-                .draw(&self.ctx, self.sprites.get("plane").unwrap())
-                .expect("plane draw");
+                .draw(&self.ctx, self.sprites.get("Plane").unwrap())
+                .expect("Plane draw");
             plane.fly();
         }
     }
@@ -281,19 +284,15 @@ impl Game {
 
         for button in self.buttons.iter() {
             button.draw(&self.ctx, &self.sprites)?;
-        }
 
-        if let Selected::WaterGun = self.selected {
-            self.ctx.begin_path();
-            self.ctx.set_stroke_style(&JsValue::from_str("#000000"));
-            self.ctx.rect(
-                self.canvas.width() as f64 - TOWER_SIZE - 5.0,
-                0.0,
-                TOWER_SIZE,
-                TOWER_SIZE + 9.0,
-            );
-            self.ctx.stroke();
-            self.ctx.close_path();
+            if self.selected == button.select() {
+                self.ctx.begin_path();
+                self.ctx.set_stroke_style(&JsValue::from_str("#000000"));
+                self.ctx
+                    .rect(button.x(), button.y(), button.size(), button.size());
+                self.ctx.stroke();
+                self.ctx.close_path();
+            }
         }
 
         self.render_text();
