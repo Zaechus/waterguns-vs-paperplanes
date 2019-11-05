@@ -14,6 +14,7 @@ use crate::{
 enum WaterGun {
     Basic,
     SuperSoaker,
+    ExtremeSoaker,
 }
 
 enum AcidTower {
@@ -48,6 +49,7 @@ pub struct Tower {
     top_img: String,
 
     upgrade_button: Button,
+    upgrade_cost: i32,
 
     dmg: i32,
     dmg_interval: f64,
@@ -65,8 +67,8 @@ impl Tower {
             x: square.x,
             y: square.y,
             size: square.size,
-            center_x: square.x + square.size * 0.5,
-            center_y: square.y + square.size * 0.5,
+            center_x: square.center_x(),
+            center_y: square.center_y(),
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
@@ -76,6 +78,7 @@ impl Tower {
                 Selected::None,
                 "Upgrade",
             ),
+            upgrade_cost: 10,
             dmg: 10,
             dmg_interval: 700.0,
             range: 200.0,
@@ -95,15 +98,16 @@ impl Tower {
             center_y: square.y + square.size * 0.5,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
-            blast_img: String::from("WaterGunBlast"),
+            blast_img: String::from("AcidTowerBlast"),
             top_img: String::from("AcidTowerTop"),
             upgrade_button: Button::new(
                 Square::new(square.x, square.y - square.size * 0.6, square.size),
                 Selected::None,
                 "Upgrade",
             ),
-            dmg: 15,
-            dmg_interval: 750.0,
+            upgrade_cost: 10,
+            dmg: 1,
+            dmg_interval: 100.0,
             range: 150.0,
             last_dmg_time: 0.0,
             mouse_over: false,
@@ -121,13 +125,14 @@ impl Tower {
             center_y: square.y + square.size * 0.5,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
-            blast_img: String::from("WaterGunBlast"),
+            blast_img: String::from("SodaMakerBlast"),
             top_img: String::from("SodaMakerTop"),
             upgrade_button: Button::new(
                 Square::new(square.x, square.y - square.size * 0.6, square.size),
                 Selected::None,
                 "Upgrade",
             ),
+            upgrade_cost: 10,
             dmg: 20,
             dmg_interval: 1000.0,
             range: 250.0,
@@ -249,7 +254,7 @@ impl Tower {
         Ok(())
     }
 
-    pub fn events(&mut self, mouse: &Mouse) {
+    pub fn events(&mut self, mouse: &Mouse, cash: &mut i32) {
         if mouse.x > self.x
             && mouse.y > self.y
             && mouse.x < self.x + self.size
@@ -274,39 +279,73 @@ impl Tower {
                 && mouse.y < self.y
             {
                 match self.variant {
-                    TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(),
-                    TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(),
-                    TowerType::SodaMaker(SodaMaker::Basic) => self.upgrade_soda2(),
-                    TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(),
+                    TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(cash),
+                    TowerType::WaterGun(WaterGun::SuperSoaker) => self.upgrade_water3(cash),
+                    TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(cash),
+                    TowerType::SodaMaker(SodaMaker::Basic) => self.upgrade_soda2(cash),
+                    TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(cash),
                     _ => (),
                 }
             }
         }
     }
 
-    fn upgrade_water2(&mut self) {
-        self.top_img = String::from("SuperSoakerTop");
-        self.variant = TowerType::WaterGun(WaterGun::SuperSoaker);
-        self.range *= 1.2;
-        self.dmg += 10;
+    fn upgrade_water2(&mut self, cash: &mut i32) {
+        if *cash >= self.upgrade_cost {
+            self.top_img = String::from("SuperSoakerTop");
+            self.blast_img = String::from("SuperSoakerBlast");
+            self.variant = TowerType::WaterGun(WaterGun::SuperSoaker);
+            self.range *= 1.2;
+            self.dmg += 5;
+            self.dmg_interval *= 0.5;
+            *cash -= self.upgrade_cost;
+            self.upgrade_cost += 10;
+        }
     }
-    fn upgrade_acid2(&mut self) {
-        self.top_img = String::from("AcidTowerTop2");
-        self.variant = TowerType::AcidTower(AcidTower::Radioactive);
-        self.range *= 1.2;
-        self.dmg += 10;
+    fn upgrade_water3(&mut self, cash: &mut i32) {
+        if *cash >= self.upgrade_cost {
+            self.top_img = String::from("ExtremeSoakerTop");
+            self.blast_img = String::from("ExtremeSoakerBlast");
+            self.variant = TowerType::WaterGun(WaterGun::ExtremeSoaker);
+            self.range *= 1.2;
+            self.dmg += 5;
+            self.dmg_interval *= 0.66;
+            *cash -= self.upgrade_cost;
+            self.upgrade_cost += 10;
+        }
     }
-    fn upgrade_soda2(&mut self) {
-        self.top_img = String::from("SparklingWaterTop");
-        self.variant = TowerType::SodaMaker(SodaMaker::SparklingWater);
-        self.range *= 1.2;
-        self.dmg += 10;
+    fn upgrade_acid2(&mut self, cash: &mut i32) {
+        if *cash >= self.upgrade_cost {
+            self.top_img = String::from("RadioactiveTowerTop");
+            self.blast_img = String::from("RadioactiveTowerBlast");
+            self.variant = TowerType::AcidTower(AcidTower::Radioactive);
+            self.range *= 1.1;
+            self.dmg *= 2;
+            self.dmg_interval *= 0.5;
+            *cash -= self.upgrade_cost;
+            self.upgrade_cost += 10;
+        }
     }
-    fn upgrade_soda3(&mut self) {
-        self.top_img = String::from("RootBeerTop");
-        self.blast_img = String::from("RootBeerBlast");
-        self.variant = TowerType::SodaMaker(SodaMaker::RootBeer);
-        self.range *= 1.2;
-        self.dmg += 10;
+    fn upgrade_soda2(&mut self, cash: &mut i32) {
+        if *cash >= self.upgrade_cost {
+            self.top_img = String::from("SparklingWaterTop");
+            self.blast_img = String::from("SparklingWaterBlast");
+            self.variant = TowerType::SodaMaker(SodaMaker::SparklingWater);
+            self.range *= 1.2;
+            self.dmg += 10;
+            *cash -= self.upgrade_cost;
+            self.upgrade_cost += 10;
+        }
+    }
+    fn upgrade_soda3(&mut self, cash: &mut i32) {
+        if *cash >= self.upgrade_cost {
+            self.top_img = String::from("RootBeerTop");
+            self.blast_img = String::from("RootBeerBlast");
+            self.variant = TowerType::SodaMaker(SodaMaker::RootBeer);
+            self.range *= 1.2;
+            self.dmg += 20;
+            *cash -= self.upgrade_cost;
+            self.upgrade_cost += 10;
+        }
     }
 }

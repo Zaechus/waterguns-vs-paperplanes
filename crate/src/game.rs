@@ -71,49 +71,31 @@ impl Game {
 
         let mut sprites = HashMap::new();
 
-        let img = HtmlImageElement::new().expect("Plane image");
-        img.set_src("static/Plane.png");
-        sprites.insert(String::from("Plane"), img);
-
-        let img = HtmlImageElement::new().expect("WaterGunBlast image");
-        img.set_src("static/WaterGunBlast.png");
-        sprites.insert(String::from("WaterGunBlast"), img);
-
-        let img = HtmlImageElement::new().expect("WaterGunBase image");
-        img.set_src("static/WaterGunBase.png");
-        sprites.insert(String::from("WaterGunBase"), img);
-
-        let img = HtmlImageElement::new().expect("WaterGunTop image");
-        img.set_src("static/WaterGunTop.png");
-        sprites.insert(String::from("WaterGunTop"), img);
-
-        let img = HtmlImageElement::new().expect("SuperSoakerTop image");
-        img.set_src("static/SuperSoakerTop.png");
-        sprites.insert(String::from("SuperSoakerTop"), img);
-
-        let img = HtmlImageElement::new().expect("AcidTowerTop image");
-        img.set_src("static/AcidTowerTop.png");
-        sprites.insert(String::from("AcidTowerTop"), img);
-
-        let img = HtmlImageElement::new().expect("AcidTowerTop2 image");
-        img.set_src("static/AcidTowerTop2.png");
-        sprites.insert(String::from("AcidTowerTop2"), img);
-
-        let img = HtmlImageElement::new().expect("SodaMakerTop image");
-        img.set_src("static/SodaMakerTop.png");
-        sprites.insert(String::from("SodaMakerTop"), img);
-
-        let img = HtmlImageElement::new().expect("SparklingWaterTop image");
-        img.set_src("static/SparklingWaterTop.png");
-        sprites.insert(String::from("SparklingWaterTop"), img);
-
-        let img = HtmlImageElement::new().expect("RootBeerTop image");
-        img.set_src("static/RootBeerTop.png");
-        sprites.insert(String::from("RootBeerTop"), img);
-
-        let img = HtmlImageElement::new().expect("RootBeerBlast image");
-        img.set_src("static/RootBeerBlast.png");
-        sprites.insert(String::from("RootBeerBlast"), img);
+        let sprite_names: [&str; 18] = [
+            "Plane",
+            "WaterGunBase",
+            "WaterGunTop",
+            "WaterGunBlast",
+            "SuperSoakerTop",
+            "SuperSoakerBlast",
+            "ExtremeSoakerTop",
+            "ExtremeSoakerBlast",
+            "AcidTowerTop",
+            "AcidTowerBlast",
+            "RadioactiveTowerTop",
+            "RadioactiveTowerBlast",
+            "SodaMakerTop",
+            "SodaMakerBlast",
+            "SparklingWaterTop",
+            "SparklingWaterBlast",
+            "RootBeerTop",
+            "RootBeerBlast",
+        ];
+        for sprite in sprite_names.iter() {
+            let img = HtmlImageElement::new().unwrap();
+            img.set_src(&format!("static/{}.png", sprite));
+            sprites.insert(String::from(*sprite), img);
+        }
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
@@ -129,7 +111,7 @@ impl Game {
 
         let towers = vec![
             Tower::new_water_gun(Square::new(500.0, canvas.height() as f64 / 2.0, TOWER_SIZE)),
-            Tower::new_acid_tower(Square::new(
+            Tower::new_water_gun(Square::new(
                 1500.0,
                 canvas.height() as f64 / 2.0,
                 TOWER_SIZE,
@@ -138,14 +120,18 @@ impl Game {
 
         let buttons = vec![
             Button::new(
-                Square::new(canvas.width() as f64 - 5.0 - TOWER_SIZE, 0.0, TOWER_SIZE),
+                Square::new(
+                    canvas.width() as f64 - 5.0 - TOWER_SIZE,
+                    TOWER_SIZE * 0.05,
+                    TOWER_SIZE,
+                ),
                 Selected::WaterGun,
                 "WaterGunTop",
             ),
             Button::new(
                 Square::new(
                     canvas.width() as f64 - 5.0 - TOWER_SIZE * 2.0,
-                    0.0,
+                    TOWER_SIZE * 0.05,
                     TOWER_SIZE,
                 ),
                 Selected::AcidTower,
@@ -154,7 +140,7 @@ impl Game {
             Button::new(
                 Square::new(
                     canvas.width() as f64 - 5.0 - TOWER_SIZE * 3.0,
-                    0.0,
+                    TOWER_SIZE * 0.05,
                     TOWER_SIZE,
                 ),
                 Selected::SodaMaker,
@@ -172,7 +158,7 @@ impl Game {
             towers,
             buttons,
             hp: 100,
-            cash: 0,
+            cash: 100,
             selected: Selected::None,
         }
     }
@@ -224,23 +210,9 @@ impl Game {
         }
     }
 
-    fn render_text(&self) {
-        self.ctx.begin_path();
-        self.ctx.set_fill_style(&JsValue::from_str("#000000"));
-        self.ctx
-            .set_font(&format!("{}px sans-serif", self.ui_text_size));
-        self.ctx
-            .fill_text(&format!("HP: {}", self.hp), 10.0, 40.0)
-            .expect("display hp");
-        self.ctx
-            .fill_text(&format!("Cash: {}", self.cash), 10.0, 80.0)
-            .expect("display cash");
-        self.ctx.close_path();
-    }
-
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
-            tower.events(&self.mouse);
+            tower.events(&self.mouse, &mut self.cash);
             tower.draw(&self.ctx, &self.sprites).expect("tower draw");
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
@@ -274,6 +246,20 @@ impl Game {
         }
     }
 
+    fn render_text(&self) {
+        self.ctx.begin_path();
+        self.ctx.set_fill_style(&JsValue::from_str("#111111"));
+        self.ctx
+            .set_font(&format!("{}px sans-serif", self.ui_text_size));
+        self.ctx
+            .fill_text(&format!("HP: {}", self.hp), 10.0, 30.0)
+            .expect("display hp");
+        self.ctx
+            .fill_text(&format!("Cash: {}", self.cash), 10.0, 70.0)
+            .expect("display cash");
+        self.ctx.close_path();
+    }
+
     fn render_top_bar(&self) -> Result<(), JsValue> {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#555555"));
@@ -287,9 +273,13 @@ impl Game {
 
             if self.selected == button.select() {
                 self.ctx.begin_path();
-                self.ctx.set_stroke_style(&JsValue::from_str("#000000"));
-                self.ctx
-                    .rect(button.x(), button.y(), button.size(), button.size());
+                self.ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
+                self.ctx.rect(
+                    button.x(),
+                    button.y() - button.size() * 0.05,
+                    button.size(),
+                    button.size() + button.size() * 0.1,
+                );
                 self.ctx.stroke();
                 self.ctx.close_path();
             }

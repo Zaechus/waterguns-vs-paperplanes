@@ -21,8 +21,8 @@ impl PaperPlane {
             x: square.x,
             y: square.y,
             size: square.size,
-            center_x: square.x + square.size / 2.0,
-            center_y: square.y + square.size / 2.0,
+            center_x: square.center_x(),
+            center_y: square.center_y(),
             hp,
             max_hp: hp as u32,
         }
@@ -60,6 +60,15 @@ impl PaperPlane {
         self.center_x += 1.7;
     }
 
+    fn draw_hp_bar(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_fill_style(&JsValue::from_str("#00ff00"));
+        ctx.fill_rect(self.x, self.y, self.size * self.hp_percent(), 3.0);
+        ctx.close_path();
+
+        Ok(())
+    }
+
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
@@ -69,11 +78,7 @@ impl PaperPlane {
             img, self.x, self.y, self.size, self.size,
         )?;
 
-        // HP bar
-        ctx.begin_path();
-        ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-        ctx.fill_rect(self.x, self.y, self.size * self.hp_percent(), 3.0);
-        ctx.close_path();
+        self.draw_hp_bar(ctx)?;
 
         Ok(())
     }
