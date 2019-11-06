@@ -99,14 +99,11 @@ impl Game {
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..100 {
-            planes.push(PaperPlane::new(
-                Square::new(
-                    -i as f64 * 75.0 + 50.0,
-                    canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
-                    PLANE_SIZE,
-                ),
-                50,
-            ));
+            planes.push(PaperPlane::new_basic(Square::new(
+                -i as f64 * 75.0 + 50.0,
+                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
+            )));
         }
 
         let towers = vec![

@@ -16,15 +16,27 @@ pub struct PaperPlane {
 }
 
 impl PaperPlane {
-    pub fn new(square: Square, hp: i32) -> Self {
+    pub fn new_basic(square: Square) -> Self {
         Self {
             x: square.x,
             y: square.y,
             size: square.size,
             center_x: square.center_x(),
             center_y: square.center_y(),
-            hp,
-            max_hp: hp as u32,
+            hp: 50,
+            max_hp: 50,
+        }
+    }
+
+    pub fn new_bullet(square: Square) -> Self {
+        Self {
+            x: square.x,
+            y: square.y,
+            size: square.size,
+            center_x: square.center_x(),
+            center_y: square.center_y(),
+            hp: 25,
+            max_hp: 25,
         }
     }
 
