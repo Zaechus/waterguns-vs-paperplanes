@@ -71,8 +71,11 @@ impl Game {
 
         let mut sprites = HashMap::new();
 
-        let sprite_names: [&str; 18] = [
+        let sprite_names: [&str; 21] = [
             "Plane",
+            "Bullet",
+            "Glider",
+            "Blimp",
             "WaterGunBase",
             "WaterGunTop",
             "WaterGunBlast",
@@ -98,8 +101,29 @@ impl Game {
         }
 
         let mut planes = Vec::with_capacity(100);
-        for i in 0..100 {
+        for i in 0..25 {
             planes.push(PaperPlane::new_basic(Square::new(
+                -i as f64 * 75.0 + 50.0,
+                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
+            )));
+        }
+        for i in 25..50 {
+            planes.push(PaperPlane::new_bullet(Square::new(
+                -i as f64 * 75.0 + 50.0,
+                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
+            )));
+        }
+        for i in 50..75 {
+            planes.push(PaperPlane::new_glider(Square::new(
+                -i as f64 * 75.0 + 50.0,
+                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
+            )));
+        }
+        for i in 75..100 {
+            planes.push(PaperPlane::new_blimp(Square::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
                 PLANE_SIZE,
@@ -236,9 +260,7 @@ impl Game {
 
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
-            plane
-                .draw(&self.ctx, self.sprites.get("Plane").unwrap())
-                .expect("Plane draw");
+            plane.draw(&self.ctx, &self.sprites).expect("Plane draw");
             plane.fly();
         }
     }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
@@ -11,6 +13,8 @@ pub struct PaperPlane {
     size: f64,
     center_x: f64,
     center_y: f64,
+    speed: f64,
+    img: String,
     hp: i32,
     max_hp: u32,
 }
@@ -23,8 +27,10 @@ impl PaperPlane {
             size: square.size,
             center_x: square.center_x(),
             center_y: square.center_y(),
-            hp: 50,
-            max_hp: 50,
+            speed: 1.7,
+            img: String::from("Plane"),
+            hp: 40,
+            max_hp: 40,
         }
     }
 
@@ -35,8 +41,38 @@ impl PaperPlane {
             size: square.size,
             center_x: square.center_x(),
             center_y: square.center_y(),
+            speed: 2.0,
+            img: String::from("Bullet"),
             hp: 25,
             max_hp: 25,
+        }
+    }
+
+    pub fn new_glider(square: Square) -> Self {
+        Self {
+            x: square.x,
+            y: square.y,
+            size: square.size,
+            center_x: square.center_x(),
+            center_y: square.center_y(),
+            speed: 1.5,
+            img: String::from("Glider"),
+            hp: 50,
+            max_hp: 50,
+        }
+    }
+
+    pub fn new_blimp(square: Square) -> Self {
+        Self {
+            x: square.x,
+            y: square.y,
+            size: square.size,
+            center_x: square.center_x(),
+            center_y: square.center_y(),
+            speed: 1.0,
+            img: String::from("Blimp"),
+            hp: 100,
+            max_hp: 100,
         }
     }
 
@@ -68,8 +104,8 @@ impl PaperPlane {
     }
 
     pub fn fly(&mut self) {
-        self.x += 1.7;
-        self.center_x += 1.7;
+        self.x += self.speed;
+        self.center_x += self.speed;
     }
 
     fn draw_hp_bar(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
@@ -84,10 +120,14 @@ impl PaperPlane {
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
-        img: &HtmlImageElement,
+        sprites: &HashMap<String, HtmlImageElement>,
     ) -> Result<(), JsValue> {
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            img, self.x, self.y, self.size, self.size,
+            sprites.get(&self.img).unwrap(),
+            self.x,
+            self.y,
+            self.size,
+            self.size,
         )?;
 
         self.draw_hp_bar(ctx)?;
