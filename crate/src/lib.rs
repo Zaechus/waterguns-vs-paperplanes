@@ -1,5 +1,7 @@
+/// Various entities found within the game
 mod entity;
 mod game;
+/// Custom types used within entities in the game
 mod types;
 mod utils;
 

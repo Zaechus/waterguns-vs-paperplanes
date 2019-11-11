@@ -11,28 +11,32 @@ use crate::{
     types::{Mouse, Selected, Square},
 };
 
+/// Different upgrade variants of a Water Gun
 enum WaterGun {
     Basic,
     SuperSoaker,
     ExtremeSoaker,
 }
-
+/// Different upgrade variants of an Acid Tower
 enum AcidTower {
     Basic,
     Radioactive,
 }
+/// Different upgrade variants of a Soda Maker
 enum SodaMaker {
     Basic,
     SparklingWater,
     RootBeer,
 }
 
+/// Represents the current type of Tower
 enum TowerType {
     WaterGun(WaterGun),
     AcidTower(AcidTower),
     SodaMaker(SodaMaker),
 }
 
+/// An entity the user spends cash to create in order to destroy Planes
 #[wasm_bindgen]
 pub struct Tower {
     variant: TowerType,
@@ -61,6 +65,7 @@ pub struct Tower {
 }
 
 impl Tower {
+    /// Construct a new Water Gun
     pub fn new_water_gun(square: Square) -> Self {
         Self {
             variant: TowerType::WaterGun(WaterGun::Basic),
@@ -88,6 +93,7 @@ impl Tower {
         }
     }
 
+    /// Construct a new Acid Tower
     pub fn new_acid_tower(square: Square) -> Self {
         Self {
             variant: TowerType::AcidTower(AcidTower::Basic),
@@ -115,6 +121,7 @@ impl Tower {
         }
     }
 
+    /// Construct a new Soda Maker
     pub fn new_soda_maker(square: Square) -> Self {
         Self {
             variant: TowerType::SodaMaker(SodaMaker::Basic),
@@ -142,13 +149,16 @@ impl Tower {
         }
     }
 
+    /// Return the x-coordinate of the center of the tower
     pub fn center_x(&self) -> f64 {
         self.center_x
     }
+    /// Return the y-coordinate of the center of the tower
     pub fn center_y(&self) -> f64 {
         self.center_y
     }
 
+    /// Takes a reference to a Plane and applies damage if conditions are met
     pub fn damage(&mut self, plane: &mut PaperPlane) {
         let dx = self.center_x - plane.center_x();
         let dy = self.center_y - plane.center_y();
@@ -169,6 +179,7 @@ impl Tower {
         }
     }
 
+    /// Draws the circular range of the Tower
     fn draw_range(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
@@ -186,6 +197,7 @@ impl Tower {
         Ok(())
     }
 
+    /// Indicates selection of the tower when drawn
     fn draw_selection(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
@@ -203,6 +215,7 @@ impl Tower {
         Ok(())
     }
 
+    /// Draws the Tower on the referenced Context
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
@@ -254,6 +267,7 @@ impl Tower {
         Ok(())
     }
 
+    /// Handle mouse interaction with the Tower
     pub fn events(&mut self, mouse: &Mouse, cash: &mut i32) {
         if mouse.x > self.x
             && mouse.y > self.y
@@ -290,6 +304,7 @@ impl Tower {
         }
     }
 
+    /// Upgrade the tower to a Super Soaker
     fn upgrade_water2(&mut self, cash: &mut i32) {
         if *cash >= self.upgrade_cost {
             self.top_img = String::from("SuperSoakerTop");
@@ -302,6 +317,7 @@ impl Tower {
             self.upgrade_cost += 10;
         }
     }
+    /// Upgrade the tower to an Extreme Soaker
     fn upgrade_water3(&mut self, cash: &mut i32) {
         if *cash >= self.upgrade_cost {
             self.top_img = String::from("ExtremeSoakerTop");
@@ -314,6 +330,7 @@ impl Tower {
             self.upgrade_cost += 10;
         }
     }
+    /// Upgrade the tower to a Radioactive Tower
     fn upgrade_acid2(&mut self, cash: &mut i32) {
         if *cash >= self.upgrade_cost {
             self.top_img = String::from("RadioactiveTowerTop");
@@ -326,6 +343,7 @@ impl Tower {
             self.upgrade_cost += 10;
         }
     }
+    /// Upgrade the tower to a Sparkling Water Tower
     fn upgrade_soda2(&mut self, cash: &mut i32) {
         if *cash >= self.upgrade_cost {
             self.top_img = String::from("SparklingWaterTop");
@@ -337,6 +355,7 @@ impl Tower {
             self.upgrade_cost += 10;
         }
     }
+    /// Upgrade the tower to a Root Beer Blaster
     fn upgrade_soda3(&mut self, cash: &mut i32) {
         if *cash >= self.upgrade_cost {
             self.top_img = String::from("RootBeerTop");

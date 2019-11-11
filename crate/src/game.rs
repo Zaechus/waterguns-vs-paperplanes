@@ -13,6 +13,7 @@ use crate::{
 const PLANE_SIZE: f64 = 50.0;
 const TOWER_SIZE: f64 = 75.0;
 
+/// A struct that handles the workings of the game
 #[wasm_bindgen]
 pub struct Game {
     ui_text_size: f64,
@@ -30,6 +31,7 @@ pub struct Game {
 
 #[wasm_bindgen]
 impl Game {
+    /// Setup a new game
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
@@ -184,6 +186,7 @@ impl Game {
         }
     }
 
+    /// Handle mouse events
     fn events(&mut self) {
         if self.mouse.up {
             let mut selection = Selected::None;
@@ -231,6 +234,7 @@ impl Game {
         }
     }
 
+    /// Render towers and harm planes
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
             tower.events(&self.mouse, &mut self.cash);
@@ -241,6 +245,7 @@ impl Game {
         }
     }
 
+    /// Remove planes if they complete the track or get destroyed
     fn remove_planes(&mut self) {
         let canvas_width = self.canvas.width();
 
@@ -258,6 +263,7 @@ impl Game {
         }
     }
 
+    /// Render all planes
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
             plane.draw(&self.ctx, &self.sprites).expect("Plane draw");
@@ -265,6 +271,7 @@ impl Game {
         }
     }
 
+    /// Render text found in the top bar
     fn render_text(&self) {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#111111"));
@@ -279,6 +286,7 @@ impl Game {
         self.ctx.close_path();
     }
 
+    /// Render the top bar
     fn render_top_bar(&self) -> Result<(), JsValue> {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#555555"));
@@ -308,6 +316,7 @@ impl Game {
         Ok(())
     }
 
+    /// Render an increment of the Game
     pub fn draw(
         &mut self,
         mouse_x: f64,

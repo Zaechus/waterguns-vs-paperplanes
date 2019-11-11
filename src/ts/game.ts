@@ -18,7 +18,7 @@ import { Game } from "waterguns-vs-paperplanes";
     }
     gameLoop();
 
-    // handle events
+    // handle mouse events
     document.addEventListener('mousemove', (e: MouseEvent) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
@@ -31,6 +31,7 @@ import { Game } from "waterguns-vs-paperplanes";
         mouseDown = false;
     });
 
+    // prevent the context menu from popping up on a right click
     noContext[0].addEventListener('contextmenu', (e: MouseEvent) => {
         mouseDown = true;
         e.preventDefault();

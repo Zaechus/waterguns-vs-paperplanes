@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 
+/// A type representing the state of Mouse events
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Mouse {
