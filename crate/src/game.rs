@@ -188,41 +188,41 @@ impl Game {
 
     /// Handle mouse events
     fn events(&mut self) {
-        if self.mouse.up {
+        if self.mouse.up() {
             let mut selection = Selected::None;
-            if self.mouse.y < TOWER_SIZE {
+            if self.mouse.y() < TOWER_SIZE {
                 for button in self.buttons.iter() {
-                    if self.mouse.x > button.x() && self.mouse.x < button.x() + button.size() {
+                    if self.mouse.x() > button.x() && self.mouse.x() < button.x() + button.size() {
                         selection = button.select();
                     }
                 }
             }
             match self.selected {
                 Selected::WaterGun => {
-                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_water_gun(Square::new(
-                            self.mouse.x - TOWER_SIZE / 2.0,
-                            self.mouse.y - TOWER_SIZE / 2.0,
+                            self.mouse.x() - TOWER_SIZE / 2.0,
+                            self.mouse.y() - TOWER_SIZE / 2.0,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;
                     }
                 }
                 Selected::AcidTower => {
-                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_acid_tower(Square::new(
-                            self.mouse.x - TOWER_SIZE / 2.0,
-                            self.mouse.y - TOWER_SIZE / 2.0,
+                            self.mouse.x() - TOWER_SIZE / 2.0,
+                            self.mouse.y() - TOWER_SIZE / 2.0,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;
                     }
                 }
                 Selected::SodaMaker => {
-                    if self.cash >= 20 && self.mouse.y > TOWER_SIZE * 2.0 {
+                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_soda_maker(Square::new(
-                            self.mouse.x - TOWER_SIZE / 2.0,
-                            self.mouse.y - TOWER_SIZE / 2.0,
+                            self.mouse.x() - TOWER_SIZE / 2.0,
+                            self.mouse.y() - TOWER_SIZE / 2.0,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;

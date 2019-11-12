@@ -9,19 +9,15 @@ use crate::types::{Selected, Square};
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Button {
-    x: f64,
-    y: f64,
-    size: f64,
+    sq: Square,
     select: Selected,
     content: String,
 }
 
 impl Button {
-    pub fn new(square: Square, select: Selected, content: &str) -> Self {
+    pub fn new(sq: Square, select: Selected, content: &str) -> Self {
         Self {
-            x: square.x,
-            y: square.y,
-            size: square.size,
+            sq,
             select,
             content: String::from(content),
         }
@@ -34,20 +30,29 @@ impl Button {
     ) -> Result<(), JsValue> {
         if let Some(img) = sprites.get(&self.content) {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                img, self.x, self.y, self.size, self.size,
+                img,
+                self.sq.x(),
+                self.sq.y(),
+                self.sq.size(),
+                self.sq.size(),
             )?;
             Ok(())
         } else {
             ctx.begin_path();
             ctx.set_fill_style(&JsValue::from_str("#222222"));
-            ctx.rect(self.x, self.y, self.size, self.size * 0.5);
+            ctx.rect(
+                self.sq.x(),
+                self.sq.y(),
+                self.sq.size(),
+                self.sq.size() * 0.5,
+            );
             ctx.fill();
             ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-            ctx.set_font(&format!("{}px monospace", self.size * 0.2));
+            ctx.set_font(&format!("{}px monospace", self.sq.size() * 0.2));
             ctx.fill_text(
                 &self.content,
-                self.x + self.size * 0.07,
-                self.y + self.size * 0.3,
+                self.sq.x() + self.sq.size() * 0.07,
+                self.sq.y() + self.sq.size() * 0.3,
             )?;
             ctx.close_path();
             Ok(())
@@ -55,13 +60,13 @@ impl Button {
     }
 
     pub fn x(&self) -> f64 {
-        self.x
+        self.sq.x()
     }
     pub fn y(&self) -> f64 {
-        self.y
+        self.sq.y()
     }
     pub fn size(&self) -> f64 {
-        self.size
+        self.sq.size()
     }
 
     pub fn select(&self) -> Selected {

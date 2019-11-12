@@ -9,11 +9,7 @@ use crate::types::Square;
 /// An entity spawned by the game to get to the end a map and reduce the player's HP
 #[wasm_bindgen]
 pub struct PaperPlane {
-    x: f64,
-    y: f64,
-    size: f64,
-    center_x: f64,
-    center_y: f64,
+    sq: Square,
     speed: f64,
     img: String,
     hp: i32,
@@ -22,13 +18,9 @@ pub struct PaperPlane {
 
 impl PaperPlane {
     /// Constructs a new basic Plane
-    pub fn new_basic(square: Square) -> Self {
+    pub fn new_basic(sq: Square) -> Self {
         Self {
-            x: square.x,
-            y: square.y,
-            size: square.size,
-            center_x: square.center_x(),
-            center_y: square.center_y(),
+            sq,
             speed: 1.7,
             img: String::from("Plane"),
             hp: 40,
@@ -37,13 +29,9 @@ impl PaperPlane {
     }
 
     /// Constructs a new Bullet
-    pub fn new_bullet(square: Square) -> Self {
+    pub fn new_bullet(sq: Square) -> Self {
         Self {
-            x: square.x,
-            y: square.y,
-            size: square.size,
-            center_x: square.center_x(),
-            center_y: square.center_y(),
+            sq,
             speed: 2.0,
             img: String::from("Bullet"),
             hp: 25,
@@ -52,13 +40,9 @@ impl PaperPlane {
     }
 
     /// Constructs a new Glider
-    pub fn new_glider(square: Square) -> Self {
+    pub fn new_glider(sq: Square) -> Self {
         Self {
-            x: square.x,
-            y: square.y,
-            size: square.size,
-            center_x: square.center_x(),
-            center_y: square.center_y(),
+            sq,
             speed: 1.5,
             img: String::from("Glider"),
             hp: 50,
@@ -67,13 +51,9 @@ impl PaperPlane {
     }
 
     /// Constructs a new Blimp
-    pub fn new_blimp(square: Square) -> Self {
+    pub fn new_blimp(sq: Square) -> Self {
         Self {
-            x: square.x,
-            y: square.y,
-            size: square.size,
-            center_x: square.center_x(),
-            center_y: square.center_y(),
+            sq,
             speed: 1.0,
             img: String::from("Blimp"),
             hp: 100,
@@ -83,23 +63,23 @@ impl PaperPlane {
 
     /// Return the x-coordinate of the Plane
     pub fn x(&self) -> f64 {
-        self.x
+        self.sq.x()
     }
     /// Return the y-coordinate of the Plane
     pub fn y(&self) -> f64 {
-        self.y
+        self.sq.y()
     }
     /// Return the size of the Plane
     pub fn size(&self) -> f64 {
-        self.size
+        self.sq.size()
     }
     /// Return the x-coordinate of the center of the Plane
     pub fn center_x(&self) -> f64 {
-        self.center_x
+        self.sq.center_x()
     }
     /// Return the y-coordinate of the center of the Plane
     pub fn center_y(&self) -> f64 {
-        self.center_y
+        self.sq.center_y()
     }
 
     /// Return current HP of the Plane
@@ -118,15 +98,19 @@ impl PaperPlane {
 
     /// Advance the location of the Plane by one increment
     pub fn fly(&mut self) {
-        self.x += self.speed;
-        self.center_x += self.speed;
+        self.sq.set_pos(self.sq.x() + self.speed, self.sq.y());
     }
 
     /// Draw the HP indicator of the Plane
     fn draw_hp_bar(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-        ctx.fill_rect(self.x, self.y, self.size * self.hp_percent(), 3.0);
+        ctx.fill_rect(
+            self.sq.x(),
+            self.sq.y(),
+            self.sq.size() * self.hp_percent(),
+            3.0,
+        );
         ctx.close_path();
 
         Ok(())
@@ -140,10 +124,10 @@ impl PaperPlane {
     ) -> Result<(), JsValue> {
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.img).unwrap(),
-            self.x,
-            self.y,
-            self.size,
-            self.size,
+            self.sq.x(),
+            self.sq.y(),
+            self.sq.size(),
+            self.sq.size(),
         )?;
 
         self.draw_hp_bar(ctx)?;
