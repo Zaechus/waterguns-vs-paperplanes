@@ -4,25 +4,36 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::types::{Selected, Square};
+use crate::types::{ButtonType, Square};
 
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Button {
     sq: Square,
-    select: Selected,
+    variant: ButtonType,
     content: String,
 }
 
 impl Button {
-    pub fn new(sq: Square, select: Selected, content: &str) -> Self {
+    /// Constructs a custom Button
+    pub fn new(sq: Square, variant: ButtonType, content: &str) -> Self {
         Self {
             sq,
-            select,
+            variant,
             content: String::from(content),
         }
     }
 
+    /// Constructs a new Upgrade Button
+    pub fn new_upgrade(sq: Square) -> Self {
+        Button::new(
+            Square::new(sq.x(), sq.y() - sq.size() * 0.6, sq.size()),
+            ButtonType::Upgrade,
+            "Upgrade",
+        )
+    }
+
+    /// Draws the button
     pub fn draw(
         &self,
         ctx: &CanvasRenderingContext2d,
@@ -69,7 +80,7 @@ impl Button {
         self.sq.size()
     }
 
-    pub fn select(&self) -> Selected {
-        self.select
+    pub fn button_type(&self) -> ButtonType {
+        self.variant
     }
 }

@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 
 /// A sub-type of entities used for a logical way to apply construction of new entities
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Square {
     x: f64,
     y: f64,
@@ -39,6 +39,7 @@ impl Square {
         self.center_y
     }
 
+    /// Updates the x, y, center x, and center y of the Square according to the x an y paramaters
     pub fn set_pos(&mut self, x: f64, y: f64) {
         self.x = x;
         self.center_x = x + self.size * 0.5;

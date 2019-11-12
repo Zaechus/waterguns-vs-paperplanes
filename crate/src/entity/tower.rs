@@ -8,7 +8,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane},
-    types::{Mouse, Selected, Square},
+    types::{Mouse, Square},
 };
 
 /// Different upgrade variants of a Water Gun
@@ -65,11 +65,7 @@ impl Tower {
     pub fn new_water_gun(sq: Square) -> Self {
         Self {
             variant: TowerType::WaterGun(WaterGun::Basic),
-            upgrade_button: Button::new(
-                Square::new(sq.x(), sq.y() - sq.size() * 0.6, sq.size()),
-                Selected::None,
-                "Upgrade",
-            ),
+            upgrade_button: Button::new_upgrade(sq.clone()),
             sq,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
@@ -89,11 +85,7 @@ impl Tower {
     pub fn new_acid_tower(sq: Square) -> Self {
         Self {
             variant: TowerType::AcidTower(AcidTower::Basic),
-            upgrade_button: Button::new(
-                Square::new(sq.x(), sq.y() - sq.size() * 0.6, sq.size()),
-                Selected::None,
-                "Upgrade",
-            ),
+            upgrade_button: Button::new_upgrade(sq.clone()),
             sq,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
@@ -113,11 +105,7 @@ impl Tower {
     pub fn new_soda_maker(sq: Square) -> Self {
         Self {
             variant: TowerType::SodaMaker(SodaMaker::Basic),
-            upgrade_button: Button::new(
-                Square::new(sq.x(), sq.y() - sq.size() * 0.6, sq.size()),
-                Selected::None,
-                "Upgrade",
-            ),
+            upgrade_button: Button::new_upgrade(sq.clone()),
             sq,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),

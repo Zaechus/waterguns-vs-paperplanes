@@ -1,7 +1,9 @@
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Selected {
+pub enum ButtonType {
     WaterGun,
     AcidTower,
     SodaMaker,
-    None,
+    Upgrade,
+    Delete,
+    Other,
 }

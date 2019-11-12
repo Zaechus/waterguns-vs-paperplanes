@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{Mouse, Selected, Square},
+    types::{ButtonType, Mouse, Square},
     utils::set_panic_hook,
 };
 
@@ -26,7 +26,7 @@ pub struct Game {
     buttons: Vec<Button>,
     hp: i32,
     cash: i32,
-    selected: Selected,
+    selected: ButtonType,
 }
 
 #[wasm_bindgen]
@@ -148,7 +148,7 @@ impl Game {
                     TOWER_SIZE * 0.05,
                     TOWER_SIZE,
                 ),
-                Selected::WaterGun,
+                ButtonType::WaterGun,
                 "WaterGunTop",
             ),
             Button::new(
@@ -157,7 +157,7 @@ impl Game {
                     TOWER_SIZE * 0.05,
                     TOWER_SIZE,
                 ),
-                Selected::AcidTower,
+                ButtonType::AcidTower,
                 "AcidTowerTop",
             ),
             Button::new(
@@ -166,7 +166,7 @@ impl Game {
                     TOWER_SIZE * 0.05,
                     TOWER_SIZE,
                 ),
-                Selected::SodaMaker,
+                ButtonType::SodaMaker,
                 "SodaMakerTop",
             ),
         ];
@@ -182,23 +182,23 @@ impl Game {
             buttons,
             hp: 100,
             cash: 100,
-            selected: Selected::None,
+            selected: ButtonType::Other,
         }
     }
 
     /// Handle mouse events
     fn events(&mut self) {
         if self.mouse.up() {
-            let mut selection = Selected::None;
+            let mut selection = ButtonType::Other;
             if self.mouse.y() < TOWER_SIZE {
                 for button in self.buttons.iter() {
                     if self.mouse.x() > button.x() && self.mouse.x() < button.x() + button.size() {
-                        selection = button.select();
+                        selection = button.button_type();
                     }
                 }
             }
             match self.selected {
-                Selected::WaterGun => {
+                ButtonType::WaterGun => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_water_gun(Square::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
@@ -208,7 +208,7 @@ impl Game {
                         self.cash -= 20;
                     }
                 }
-                Selected::AcidTower => {
+                ButtonType::AcidTower => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_acid_tower(Square::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
@@ -218,7 +218,7 @@ impl Game {
                         self.cash -= 20;
                     }
                 }
-                Selected::SodaMaker => {
+                ButtonType::SodaMaker => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
                         self.towers.push(Tower::new_soda_maker(Square::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
@@ -298,7 +298,7 @@ impl Game {
         for button in self.buttons.iter() {
             button.draw(&self.ctx, &self.sprites)?;
 
-            if self.selected == button.select() {
+            if self.selected == button.button_type() {
                 self.ctx.begin_path();
                 self.ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
                 self.ctx.rect(
