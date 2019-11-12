@@ -1,19 +1,24 @@
-build: fmt wasm ts
+build: fmt wasm_plain ts_plain webpack
 
 run:
     python3 x.py
 
-wasm: fmt
-    rm dist/*.wasm || echo 0
-    cd crate; wasm-pack build; cd ..
-    npx webpack
+wasm: fmt wasm_plain webpack
 
-ts:
-    cd src/ts; tsc *.ts --outDir ..; cd ../..
+ts: ts_plain webpack
+
+doc:
+    cd crate; cargo doc --open --document-private-items
+
+webpack:
     npx webpack
 
 fmt:
     cargo fmt
 
-doc:
-    cd crate; cargo doc --open --document-private-items
+wasm_plain:
+    rm dist/*.wasm || echo 0
+    cd crate; wasm-pack build; cd ..
+
+ts_plain:
+    cd src/ts; tsc *.ts --outDir ..; cd ../..
