@@ -8,7 +8,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane},
-    types::{Mouse, Square},
+    types::{Mouse, Rect},
 };
 
 /// Different upgrade variants of a Water Gun
@@ -41,7 +41,7 @@ enum TowerType {
 pub struct Tower {
     variant: TowerType,
 
-    sq: Square,
+    rect: Rect,
     rotation: f64,
 
     base_img: String,
@@ -62,11 +62,16 @@ pub struct Tower {
 
 impl Tower {
     /// Construct a new Water Gun
-    pub fn new_water_gun(sq: Square) -> Self {
+    pub fn new_water_gun(rect: Rect) -> Self {
         Self {
             variant: TowerType::WaterGun(WaterGun::Basic),
-            upgrade_button: Button::new_upgrade(sq.clone()),
-            sq,
+            upgrade_button: Button::new_upgrade(Rect::new(
+                rect.x(),
+                rect.y() - rect.h() * 0.6,
+                rect.w(),
+                rect.h(),
+            )),
+            rect: rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
@@ -82,11 +87,16 @@ impl Tower {
     }
 
     /// Construct a new Acid Tower
-    pub fn new_acid_tower(sq: Square) -> Self {
+    pub fn new_acid_tower(rect: Rect) -> Self {
         Self {
             variant: TowerType::AcidTower(AcidTower::Basic),
-            upgrade_button: Button::new_upgrade(sq.clone()),
-            sq,
+            upgrade_button: Button::new_upgrade(Rect::new(
+                rect.x(),
+                rect.y() - rect.h() * 0.6,
+                rect.w(),
+                rect.h(),
+            )),
+            rect: rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("AcidTowerBlast"),
@@ -102,11 +112,16 @@ impl Tower {
     }
 
     /// Construct a new Soda Maker
-    pub fn new_soda_maker(sq: Square) -> Self {
+    pub fn new_soda_maker(rect: Rect) -> Self {
         Self {
             variant: TowerType::SodaMaker(SodaMaker::Basic),
-            upgrade_button: Button::new_upgrade(sq.clone()),
-            sq,
+            upgrade_button: Button::new_upgrade(Rect::new(
+                rect.x(),
+                rect.y() - rect.h() * 0.6,
+                rect.w(),
+                rect.h(),
+            )),
+            rect: rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("SodaMakerBlast"),
@@ -123,24 +138,24 @@ impl Tower {
 
     /// Return the x-coordinate of the center of the tower
     pub fn center_x(&self) -> f64 {
-        self.sq.center_x()
+        self.rect.center_x()
     }
     /// Return the y-coordinate of the center of the tower
     pub fn center_y(&self) -> f64 {
-        self.sq.center_y()
+        self.rect.center_y()
     }
 
     /// Takes a reference to a Plane and applies damage if conditions are met
     pub fn damage(&mut self, plane: &mut PaperPlane) {
-        let dx = self.sq.center_x() - plane.center_x();
-        let dy = self.sq.center_y() - plane.center_y();
+        let dx = self.rect.center_x() - plane.center_x();
+        let dy = self.rect.center_y() - plane.center_y();
         let dist = (dx.powi(2) + dy.powi(2)).sqrt();
 
         if dist < self.range {
             if Date::now() - self.last_dmg_time > self.dmg_interval {
                 self.last_dmg_time = Date::now();
 
-                if plane.center_y() > self.sq.center_y() {
+                if plane.center_y() > self.rect.center_y() {
                     self.rotation = PI - ((dx / dist).acos() + PI * 1.5);
                 } else {
                     self.rotation = (dx / dist).acos() + PI * 1.5;
@@ -156,8 +171,8 @@ impl Tower {
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#ff0000"));
         ctx.ellipse(
-            self.sq.center_x(),
-            self.sq.center_y(),
+            self.rect.center_x(),
+            self.rect.center_y(),
             self.range,
             self.range,
             PI / 4.0,
@@ -174,10 +189,10 @@ impl Tower {
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
         ctx.ellipse(
-            self.sq.center_x(),
-            self.sq.center_y(),
-            self.sq.size() * 0.8,
-            self.sq.size() * 0.8,
+            self.rect.center_x(),
+            self.rect.center_y(),
+            self.rect.w() * 0.8,
+            self.rect.h() * 0.8,
             PI * 0.25,
             0.0,
             PI * 2.0,
@@ -194,33 +209,33 @@ impl Tower {
         sprites: &HashMap<String, HtmlImageElement>,
     ) -> Result<(), JsValue> {
         // draw tower base
-        let base_size = self.sq.size() * 1.25;
+        let base_size = self.rect.w() * 1.25;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.base_img).unwrap(),
-            self.sq.center_x() - base_size * 0.5,
-            self.sq.center_y() - base_size / 2.5,
+            self.rect.center_x() - base_size * 0.5,
+            self.rect.center_y() - base_size / 2.5,
             base_size,
             base_size,
         )?;
 
         // draw top sprite with potential blast sprite
-        ctx.translate(self.sq.center_x(), self.sq.center_y())?;
+        ctx.translate(self.rect.center_x(), self.rect.center_y())?;
         ctx.rotate(self.rotation)?;
         if Date::now() - self.last_dmg_time < 100.0 {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
                 sprites.get(&self.blast_img).unwrap(),
-                -self.sq.size() * 0.5,
-                -self.sq.size() * 1.4,
-                self.sq.size(),
-                self.sq.size(),
+                -self.rect.w() * 0.5,
+                -self.rect.h() * 1.4,
+                self.rect.w(),
+                self.rect.h(),
             )?;
         }
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.top_img).unwrap(),
-            -self.sq.size() * 0.5,
-            -self.sq.size() * 0.5,
-            self.sq.size(),
-            self.sq.size(),
+            -self.rect.w() * 0.5,
+            -self.rect.h() * 0.5,
+            self.rect.w(),
+            self.rect.h(),
         )?;
         ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
 
@@ -241,29 +256,15 @@ impl Tower {
 
     /// Handle mouse interaction with the Tower
     pub fn events(&mut self, mouse: &Mouse, cash: &mut i32) {
-        if mouse.x() > self.sq.x()
-            && mouse.y() > self.sq.y()
-            && mouse.x() < self.sq.x() + self.sq.size()
-            && mouse.y() < self.sq.y() + self.sq.size()
-        {
-            self.mouse_over = true;
-        } else {
-            self.mouse_over = false;
-        }
+        self.mouse_over = mouse.inside(&self.rect);
+
         if mouse.up() {
             if self.mouse_over {
                 self.context_open = !self.context_open;
-            } else if mouse.x() < self.sq.x() - self.sq.size()
-                || mouse.y() < self.sq.y() - self.sq.size()
-                || mouse.x() > self.sq.x() + self.sq.size() * 2.0
-                || mouse.y() > self.sq.y() + self.sq.size() * 2.0
-            {
+            } else {
                 self.context_open = false;
-            } else if mouse.x() > self.sq.x()
-                && mouse.y() > self.sq.y() - self.sq.size() * 0.6
-                && mouse.x() < self.sq.x() + self.sq.size()
-                && mouse.y() < self.sq.y()
-            {
+            }
+            if mouse.inside(self.upgrade_button.rect()) {
                 match self.variant {
                     TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(cash),
                     TowerType::WaterGun(WaterGun::SuperSoaker) => self.upgrade_water3(cash),

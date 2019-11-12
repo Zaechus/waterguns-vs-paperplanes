@@ -4,32 +4,41 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::types::{ButtonType, Square};
+use crate::types::{ButtonType, Rect};
 
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Button {
-    sq: Square,
+    rect: Rect,
     variant: ButtonType,
     content: String,
 }
 
 impl Button {
     /// Constructs a custom Button
-    pub fn new(sq: Square, variant: ButtonType, content: &str) -> Self {
+    pub fn new(rect: Rect, variant: ButtonType, content: &str) -> Self {
         Self {
-            sq,
+            rect,
             variant,
             content: String::from(content),
         }
     }
 
     /// Constructs a new Upgrade Button
-    pub fn new_upgrade(sq: Square) -> Self {
+    pub fn new_upgrade(rect: Rect) -> Self {
         Button::new(
-            Square::new(sq.x(), sq.y() - sq.size() * 0.6, sq.size()),
+            Rect::new(rect.x(), rect.y(), rect.w(), rect.h()),
             ButtonType::Upgrade,
             "Upgrade",
+        )
+    }
+
+    /// Constructs a new Delete Button
+    pub fn new_delete(rect: Rect) -> Self {
+        Button::new(
+            Rect::new(rect.x(), rect.y(), rect.w(), rect.h()),
+            ButtonType::Delete,
+            "Delete",
         )
     }
 
@@ -42,28 +51,28 @@ impl Button {
         if let Some(img) = sprites.get(&self.content) {
             ctx.draw_image_with_html_image_element_and_dw_and_dh(
                 img,
-                self.sq.x(),
-                self.sq.y(),
-                self.sq.size(),
-                self.sq.size(),
+                self.rect.x(),
+                self.rect.y(),
+                self.rect.w(),
+                self.rect.h(),
             )?;
             Ok(())
         } else {
             ctx.begin_path();
             ctx.set_fill_style(&JsValue::from_str("#222222"));
             ctx.rect(
-                self.sq.x(),
-                self.sq.y(),
-                self.sq.size(),
-                self.sq.size() * 0.5,
+                self.rect.x(),
+                self.rect.y(),
+                self.rect.w(),
+                self.rect.h() * 0.5,
             );
             ctx.fill();
             ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-            ctx.set_font(&format!("{}px monospace", self.sq.size() * 0.2));
+            ctx.set_font(&format!("{}px monospace", self.rect.w() * 0.2));
             ctx.fill_text(
                 &self.content,
-                self.sq.x() + self.sq.size() * 0.07,
-                self.sq.y() + self.sq.size() * 0.3,
+                self.rect.x() + self.rect.w() * 0.07,
+                self.rect.y() + self.rect.h() * 0.3,
             )?;
             ctx.close_path();
             Ok(())
@@ -71,13 +80,19 @@ impl Button {
     }
 
     pub fn x(&self) -> f64 {
-        self.sq.x()
+        self.rect.x()
     }
     pub fn y(&self) -> f64 {
-        self.sq.y()
+        self.rect.y()
     }
-    pub fn size(&self) -> f64 {
-        self.sq.size()
+    pub fn w(&self) -> f64 {
+        self.rect.w()
+    }
+    pub fn h(&self) -> f64 {
+        self.rect.h()
+    }
+    pub fn rect(&self) -> &Rect {
+        &self.rect
     }
 
     pub fn button_type(&self) -> ButtonType {

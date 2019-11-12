@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{ButtonType, Mouse, Square},
+    types::{ButtonType, Mouse, Rect},
     utils::set_panic_hook,
 };
 
@@ -104,66 +104,79 @@ impl Game {
 
         let mut planes = Vec::with_capacity(100);
         for i in 0..25 {
-            planes.push(PaperPlane::new_basic(Square::new(
+            planes.push(PaperPlane::new_basic(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
                 PLANE_SIZE,
             )));
         }
         for i in 25..50 {
-            planes.push(PaperPlane::new_bullet(Square::new(
+            planes.push(PaperPlane::new_bullet(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
                 PLANE_SIZE,
             )));
         }
         for i in 50..75 {
-            planes.push(PaperPlane::new_glider(Square::new(
+            planes.push(PaperPlane::new_glider(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
                 PLANE_SIZE,
             )));
         }
         for i in 75..100 {
-            planes.push(PaperPlane::new_blimp(Square::new(
+            planes.push(PaperPlane::new_blimp(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                PLANE_SIZE,
                 PLANE_SIZE,
             )));
         }
 
         let towers = vec![
-            Tower::new_water_gun(Square::new(500.0, canvas.height() as f64 / 2.0, TOWER_SIZE)),
-            Tower::new_water_gun(Square::new(
+            Tower::new_water_gun(Rect::new(
+                500.0,
+                canvas.height() as f64 / 2.0,
+                TOWER_SIZE,
+                TOWER_SIZE,
+            )),
+            Tower::new_water_gun(Rect::new(
                 1500.0,
                 canvas.height() as f64 / 2.0,
+                TOWER_SIZE,
                 TOWER_SIZE,
             )),
         ];
 
         let buttons = vec![
             Button::new(
-                Square::new(
+                Rect::new(
                     canvas.width() as f64 - 5.0 - TOWER_SIZE,
                     TOWER_SIZE * 0.05,
+                    TOWER_SIZE,
                     TOWER_SIZE,
                 ),
                 ButtonType::WaterGun,
                 "WaterGunTop",
             ),
             Button::new(
-                Square::new(
+                Rect::new(
                     canvas.width() as f64 - 5.0 - TOWER_SIZE * 2.0,
                     TOWER_SIZE * 0.05,
+                    TOWER_SIZE,
                     TOWER_SIZE,
                 ),
                 ButtonType::AcidTower,
                 "AcidTowerTop",
             ),
             Button::new(
-                Square::new(
+                Rect::new(
                     canvas.width() as f64 - 5.0 - TOWER_SIZE * 3.0,
                     TOWER_SIZE * 0.05,
+                    TOWER_SIZE,
                     TOWER_SIZE,
                 ),
                 ButtonType::SodaMaker,
@@ -192,7 +205,7 @@ impl Game {
             let mut selection = ButtonType::Other;
             if self.mouse.y() < TOWER_SIZE {
                 for button in self.buttons.iter() {
-                    if self.mouse.x() > button.x() && self.mouse.x() < button.x() + button.size() {
+                    if self.mouse.inside(button.rect()) {
                         selection = button.button_type();
                     }
                 }
@@ -200,9 +213,10 @@ impl Game {
             match self.selected {
                 ButtonType::WaterGun => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_water_gun(Square::new(
+                        self.towers.push(Tower::new_water_gun(Rect::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
                             self.mouse.y() - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;
@@ -210,9 +224,10 @@ impl Game {
                 }
                 ButtonType::AcidTower => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_acid_tower(Square::new(
+                        self.towers.push(Tower::new_acid_tower(Rect::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
                             self.mouse.y() - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;
@@ -220,9 +235,10 @@ impl Game {
                 }
                 ButtonType::SodaMaker => {
                     if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_soda_maker(Square::new(
+                        self.towers.push(Tower::new_soda_maker(Rect::new(
                             self.mouse.x() - TOWER_SIZE / 2.0,
                             self.mouse.y() - TOWER_SIZE / 2.0,
+                            TOWER_SIZE,
                             TOWER_SIZE,
                         )));
                         self.cash -= 20;
@@ -303,9 +319,9 @@ impl Game {
                 self.ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
                 self.ctx.rect(
                     button.x(),
-                    button.y() - button.size() * 0.05,
-                    button.size(),
-                    button.size() + button.size() * 0.1,
+                    button.y() - button.h() * 0.05,
+                    button.w(),
+                    button.h() + button.h() * 0.1,
                 );
                 self.ctx.stroke();
                 self.ctx.close_path();

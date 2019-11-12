@@ -1,7 +1,7 @@
 mod buttontype;
 mod mouse;
-mod square;
+mod rect;
 
 pub use buttontype::ButtonType;
 pub use mouse::Mouse;
-pub use square::Square;
+pub use rect::Rect;
