@@ -12,6 +12,7 @@ pub struct Button {
     rect: Rect,
     variant: ButtonType,
     content: String,
+    selected: bool,
 }
 
 impl Button {
@@ -21,6 +22,7 @@ impl Button {
             rect,
             variant,
             content: String::from(content),
+            selected: false,
         }
     }
 
@@ -42,6 +44,55 @@ impl Button {
         )
     }
 
+    fn draw_selection(&self, ctx: &CanvasRenderingContext2d) {
+        ctx.begin_path();
+        ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
+        ctx.rect(
+            self.x(),
+            self.y() - self.h() * 0.05,
+            self.w(),
+            self.h() + self.h() * 0.1,
+        );
+        ctx.stroke();
+        ctx.close_path();
+    }
+
+    fn draw_image_button(
+        &self,
+        ctx: &CanvasRenderingContext2d,
+        img: &HtmlImageElement,
+    ) -> Result<(), JsValue> {
+        ctx.draw_image_with_html_image_element_and_dw_and_dh(
+            img,
+            self.rect.x(),
+            self.rect.y(),
+            self.rect.w(),
+            self.rect.h(),
+        )?;
+        Ok(())
+    }
+
+    fn draw_text_button(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_fill_style(&JsValue::from_str("#222222"));
+        ctx.rect(
+            self.rect.x(),
+            self.rect.y(),
+            self.rect.w(),
+            self.rect.h() * 0.5,
+        );
+        ctx.fill();
+        ctx.set_fill_style(&JsValue::from_str("#00ff00"));
+        ctx.set_font(&format!("{}px monospace", self.rect.w() * 0.2));
+        ctx.fill_text(
+            &self.content,
+            self.rect.x() + self.rect.w() * 0.07,
+            self.rect.y() + self.rect.h() * 0.3,
+        )?;
+        ctx.close_path();
+        Ok(())
+    }
+
     /// Draws the button
     pub fn draw(
         &self,
@@ -49,34 +100,15 @@ impl Button {
         sprites: &HashMap<String, HtmlImageElement>,
     ) -> Result<(), JsValue> {
         if let Some(img) = sprites.get(&self.content) {
-            ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                img,
-                self.rect.x(),
-                self.rect.y(),
-                self.rect.w(),
-                self.rect.h(),
-            )?;
-            Ok(())
+            self.draw_image_button(ctx, &img)
         } else {
-            ctx.begin_path();
-            ctx.set_fill_style(&JsValue::from_str("#222222"));
-            ctx.rect(
-                self.rect.x(),
-                self.rect.y(),
-                self.rect.w(),
-                self.rect.h() * 0.5,
-            );
-            ctx.fill();
-            ctx.set_fill_style(&JsValue::from_str("#00ff00"));
-            ctx.set_font(&format!("{}px monospace", self.rect.w() * 0.2));
-            ctx.fill_text(
-                &self.content,
-                self.rect.x() + self.rect.w() * 0.07,
-                self.rect.y() + self.rect.h() * 0.3,
-            )?;
-            ctx.close_path();
-            Ok(())
+            self.draw_text_button(ctx)
+        }?;
+
+        if self.selected {
+            self.draw_selection(ctx)
         }
+        Ok(())
     }
 
     pub fn x(&self) -> f64 {
@@ -97,5 +129,11 @@ impl Button {
 
     pub fn button_type(&self) -> ButtonType {
         self.variant
+    }
+    pub fn select(&mut self) {
+        self.selected = true;
+    }
+    pub fn deselect(&mut self) {
+        self.selected = false;
     }
 }

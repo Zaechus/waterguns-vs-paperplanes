@@ -7,6 +7,10 @@ wasm: fmt wasm_plain webpack
 
 ts: ts_plain webpack
 
+c:
+    cargo clippy
+    cd crate; cargo clippy
+
 doc:
     cd crate; cargo doc --open --document-private-items
 

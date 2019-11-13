@@ -1,8 +1,10 @@
 /// Various entities found within the game
 mod entity;
+/// The Game struct
 mod game;
 /// Custom types used within entities in the game
 mod types;
+/// Useful miscellaneous functions
 mod utils;
 
 use wasm_bindgen::prelude::*;

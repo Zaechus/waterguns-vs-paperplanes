@@ -10,23 +10,27 @@ use crate::{
     utils::set_panic_hook,
 };
 
-const PLANE_SIZE: f64 = 50.0;
-const TOWER_SIZE: f64 = 75.0;
+const WATERGUN_COST: i32 = 20;
+const ACID_COST: i32 = 30;
+const SODA_COST: i32 = 50;
 
 /// A struct that handles the workings of the game
 #[wasm_bindgen]
 pub struct Game {
+    tower_size: f64,
     ui_text_size: f64,
+
     canvas: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
     mouse: Mouse,
+
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
     buttons: Vec<Button>,
+
     hp: i32,
     cash: i32,
-    selected: ButtonType,
 }
 
 #[wasm_bindgen]
@@ -102,82 +106,76 @@ impl Game {
             sprites.insert(String::from(*sprite), img);
         }
 
+        let plane_size = canvas.height() as f64 * 0.05;
         let mut planes = Vec::with_capacity(100);
         for i in 0..25 {
             planes.push(PaperPlane::new_basic(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
-                PLANE_SIZE,
-                PLANE_SIZE,
+                plane_size,
+                plane_size,
             )));
         }
         for i in 25..50 {
             planes.push(PaperPlane::new_bullet(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
-                PLANE_SIZE,
-                PLANE_SIZE,
+                plane_size,
+                plane_size,
             )));
         }
         for i in 50..75 {
             planes.push(PaperPlane::new_glider(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
-                PLANE_SIZE,
-                PLANE_SIZE,
+                plane_size,
+                plane_size,
             )));
         }
         for i in 75..100 {
             planes.push(PaperPlane::new_blimp(Rect::new(
                 -i as f64 * 75.0 + 50.0,
                 canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
-                PLANE_SIZE,
-                PLANE_SIZE,
+                plane_size,
+                plane_size,
             )));
         }
 
-        let towers = vec![
-            Tower::new_water_gun(Rect::new(
-                500.0,
-                canvas.height() as f64 / 2.0,
-                TOWER_SIZE,
-                TOWER_SIZE,
-            )),
-            Tower::new_water_gun(Rect::new(
-                1500.0,
-                canvas.height() as f64 / 2.0,
-                TOWER_SIZE,
-                TOWER_SIZE,
-            )),
-        ];
+        let tower_size = canvas.height() as f64 * 0.08;
+        let towers = vec![Tower::new_water_gun(Rect::new(
+            canvas.width() as f64 / 2.0,
+            canvas.height() as f64 / 2.0,
+            tower_size,
+            tower_size,
+        ))];
 
         let buttons = vec![
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - TOWER_SIZE,
-                    TOWER_SIZE * 0.05,
-                    TOWER_SIZE,
-                    TOWER_SIZE,
+                    canvas.width() as f64 - 5.0 - tower_size,
+                    tower_size * 0.05,
+                    tower_size,
+                    tower_size,
                 ),
                 ButtonType::WaterGun,
                 "WaterGunTop",
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - TOWER_SIZE * 2.0,
-                    TOWER_SIZE * 0.05,
-                    TOWER_SIZE,
-                    TOWER_SIZE,
+                    canvas.width() as f64 - 5.0 - tower_size * 2.0,
+                    tower_size * 0.05,
+                    tower_size,
+                    tower_size,
                 ),
                 ButtonType::AcidTower,
                 "AcidTowerTop",
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - TOWER_SIZE * 3.0,
-                    TOWER_SIZE * 0.05,
-                    TOWER_SIZE,
-                    TOWER_SIZE,
+                    canvas.width() as f64 - 5.0 - tower_size * 3.0,
+                    tower_size * 0.05,
+                    tower_size,
+                    tower_size,
                 ),
                 ButtonType::SodaMaker,
                 "SodaMakerTop",
@@ -185,6 +183,7 @@ impl Game {
         ];
 
         Self {
+            tower_size,
             ui_text_size: canvas.width() as f64 * 0.015,
             canvas,
             ctx,
@@ -195,58 +194,58 @@ impl Game {
             buttons,
             hp: 100,
             cash: 100,
-            selected: ButtonType::Other,
         }
     }
 
     /// Handle mouse events
     fn events(&mut self) {
-        if self.mouse.up() {
-            let mut selection = ButtonType::Other;
-            if self.mouse.y() < TOWER_SIZE {
-                for button in self.buttons.iter() {
+        for button in self.buttons.iter_mut() {
+            button.deselect();
+            if self.mouse.up() {
+                if self.mouse.y() < self.tower_size {
                     if self.mouse.inside(button.rect()) {
-                        selection = button.button_type();
+                        button.select();
+                    }
+                }
+                if self.mouse.y() > self.tower_size * 1.5 {
+                    match button.button_type() {
+                        ButtonType::WaterGun => {
+                            if self.cash >= WATERGUN_COST {
+                                self.towers.push(Tower::new_water_gun(Rect::new(
+                                    self.mouse.x() - self.tower_size / 2.0,
+                                    self.mouse.y() - self.tower_size / 2.0,
+                                    self.tower_size,
+                                    self.tower_size,
+                                )));
+                                self.cash -= WATERGUN_COST;
+                            }
+                        }
+                        ButtonType::AcidTower => {
+                            if self.cash >= ACID_COST {
+                                self.towers.push(Tower::new_acid_tower(Rect::new(
+                                    self.mouse.x() - self.tower_size / 2.0,
+                                    self.mouse.y() - self.tower_size / 2.0,
+                                    self.tower_size,
+                                    self.tower_size,
+                                )));
+                                self.cash -= ACID_COST;
+                            }
+                        }
+                        ButtonType::SodaMaker => {
+                            if self.cash >= SODA_COST {
+                                self.towers.push(Tower::new_soda_maker(Rect::new(
+                                    self.mouse.x() - self.tower_size / 2.0,
+                                    self.mouse.y() - self.tower_size / 2.0,
+                                    self.tower_size,
+                                    self.tower_size,
+                                )));
+                                self.cash -= SODA_COST;
+                            }
+                        }
+                        _ => (),
                     }
                 }
             }
-            match self.selected {
-                ButtonType::WaterGun => {
-                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_water_gun(Rect::new(
-                            self.mouse.x() - TOWER_SIZE / 2.0,
-                            self.mouse.y() - TOWER_SIZE / 2.0,
-                            TOWER_SIZE,
-                            TOWER_SIZE,
-                        )));
-                        self.cash -= 20;
-                    }
-                }
-                ButtonType::AcidTower => {
-                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_acid_tower(Rect::new(
-                            self.mouse.x() - TOWER_SIZE / 2.0,
-                            self.mouse.y() - TOWER_SIZE / 2.0,
-                            TOWER_SIZE,
-                            TOWER_SIZE,
-                        )));
-                        self.cash -= 20;
-                    }
-                }
-                ButtonType::SodaMaker => {
-                    if self.cash >= 20 && self.mouse.y() > TOWER_SIZE * 2.0 {
-                        self.towers.push(Tower::new_soda_maker(Rect::new(
-                            self.mouse.x() - TOWER_SIZE / 2.0,
-                            self.mouse.y() - TOWER_SIZE / 2.0,
-                            TOWER_SIZE,
-                            TOWER_SIZE,
-                        )));
-                        self.cash -= 20;
-                    }
-                }
-                _ => (),
-            }
-            self.selected = selection;
         }
     }
 
@@ -307,25 +306,12 @@ impl Game {
         self.ctx.begin_path();
         self.ctx.set_fill_style(&JsValue::from_str("#555555"));
         self.ctx
-            .rect(0.0, 0.0, self.canvas.width() as f64, TOWER_SIZE + 10.0);
+            .rect(0.0, 0.0, self.canvas.width() as f64, self.tower_size + 10.0);
         self.ctx.fill();
         self.ctx.close_path();
 
         for button in self.buttons.iter() {
             button.draw(&self.ctx, &self.sprites)?;
-
-            if self.selected == button.button_type() {
-                self.ctx.begin_path();
-                self.ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
-                self.ctx.rect(
-                    button.x(),
-                    button.y() - button.h() * 0.05,
-                    button.w(),
-                    button.h() + button.h() * 0.1,
-                );
-                self.ctx.stroke();
-                self.ctx.close_path();
-            }
         }
 
         self.render_text();
@@ -358,5 +344,11 @@ impl Game {
 
         self.render_top_bar().expect("render top bar");
         Ok(())
+    }
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
     }
 }

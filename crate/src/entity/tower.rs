@@ -8,33 +8,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane},
-    types::{Mouse, Rect},
+    types::{AcidTower, Mouse, Rect, SodaMaker, TowerType, WaterGun},
 };
-
-/// Different upgrade variants of a Water Gun
-enum WaterGun {
-    Basic,
-    SuperSoaker,
-    ExtremeSoaker,
-}
-/// Different upgrade variants of an Acid Tower
-enum AcidTower {
-    Basic,
-    Radioactive,
-}
-/// Different upgrade variants of a Soda Maker
-enum SodaMaker {
-    Basic,
-    SparklingWater,
-    RootBeer,
-}
-
-/// Represents the current type of Tower
-enum TowerType {
-    WaterGun(WaterGun),
-    AcidTower(AcidTower),
-    SodaMaker(SodaMaker),
-}
 
 /// An entity the user spends cash to create in order to destroy Planes
 #[wasm_bindgen]
