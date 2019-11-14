@@ -1,8 +1,8 @@
 [package]
-name = "waterguns-vs-paperplanes"
-description = ""
+name = "waterguns-vs-paperplanes-wasm"
+description = "The Rust to WASM components of Water Guns vs Paper Planes"
 version = "0.1.0"
-authors = ["Maxwell Anderson, Caleb McDonald, Angelina Wanderlingh"]
+authors = ["Maxwell Anderson"]
 edition = "2018"
 license = "MIT"
 repository = "https://github.com/Zaechus/waterguns-vs-paperplanes"
@@ -37,6 +37,3 @@ features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.2"
-
-[profile.release]
-opt-level = "s"

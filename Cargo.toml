@@ -1,5 +1,6 @@
 [package]
-name = "wvp-server"
+name = "waterguns-vs-paperplanes"
+description = "A tower defense game where the player creates water gun towers to defend against attacking paper planes."
 version = "0.1.0"
 authors = ["Maxwell Anderson, Caleb McDonald, Angelina Wanderlingh"]
 edition = "2018"
@@ -13,3 +14,6 @@ members = [
 
 [dependencies]
 rocket = "0.4"
+
+[profile.release]
+opt-level = "s"

@@ -627,6 +627,13 @@ dependencies = [
 name = "waterguns-vs-paperplanes"
 version = "0.1.0"
 dependencies = [
+ "rocket 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "waterguns-vs-paperplanes-wasm"
+version = "0.1.0"
+dependencies = [
  "console_error_panic_hook 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "js-sys 0.3.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.54 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -684,13 +691,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "wvp-server"
-version = "0.1.0"
-dependencies = [
- "rocket 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "yansi"
