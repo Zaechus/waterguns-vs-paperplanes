@@ -199,15 +199,9 @@ impl Game {
 
     /// Handle mouse events
     fn events(&mut self) {
-        for button in self.buttons.iter_mut() {
-            button.deselect();
-            if self.mouse.up() {
-                if self.mouse.y() < self.tower_size {
-                    if self.mouse.inside(button.rect()) {
-                        button.select();
-                    }
-                }
-                if self.mouse.y() > self.tower_size * 1.5 {
+        if self.mouse.up() {
+            for button in self.buttons.iter_mut() {
+                if self.mouse.y() > self.tower_size * 1.5 && button.selected() {
                     match button.button_type() {
                         ButtonType::WaterGun => {
                             if self.cash >= WATERGUN_COST {
@@ -245,6 +239,12 @@ impl Game {
                         _ => (),
                     }
                 }
+                button.deselect();
+                if self.mouse.y() < self.tower_size {
+                    if self.mouse.inside(button.rect()) {
+                        button.select();
+                    }
+                }
             }
         }
     }
@@ -254,26 +254,9 @@ impl Game {
         for tower in self.towers.iter_mut() {
             tower.events(&self.mouse, &mut self.cash);
             tower.draw(&self.ctx, &self.sprites).expect("tower draw");
+
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
-            }
-        }
-    }
-
-    /// Remove planes if they complete the track or get destroyed
-    fn remove_planes(&mut self) {
-        let canvas_width = self.canvas.width();
-
-        let mut i = 0;
-        while i != self.planes.len() {
-            if self.planes[i].hp() <= 0 {
-                self.planes.remove(i);
-                self.cash += 10;
-            } else if self.planes[i].x() >= canvas_width.into() {
-                self.planes.remove(i);
-                self.hp -= 1;
-            } else {
-                i += 1;
             }
         }
     }
@@ -283,6 +266,22 @@ impl Game {
         for plane in self.planes.iter_mut() {
             plane.draw(&self.ctx, &self.sprites).expect("Plane draw");
             plane.fly();
+        }
+    }
+
+    /// Remove planes if they complete the track or get destroyed
+    fn remove_planes(&mut self) {
+        let mut i = 0;
+        while i != self.planes.len() {
+            if self.planes[i].hp() <= 0 {
+                self.cash += 10;
+                self.planes.remove(i);
+            } else if self.planes[i].x() >= self.canvas.width().into() {
+                self.hp -= self.planes[i].damage() as i32;
+                self.planes.remove(i);
+            } else {
+                i += 1;
+            }
         }
     }
 
@@ -338,9 +337,9 @@ impl Game {
         self.events();
 
         self.render_towers();
+        self.render_planes();
 
         self.remove_planes();
-        self.render_planes();
 
         self.render_top_bar().expect("render top bar");
         Ok(())

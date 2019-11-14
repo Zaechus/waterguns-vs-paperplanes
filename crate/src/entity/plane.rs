@@ -14,6 +14,7 @@ pub struct PaperPlane {
     img: String,
     hp: i32,
     max_hp: u32,
+    damage: u32,
 }
 
 impl PaperPlane {
@@ -25,6 +26,7 @@ impl PaperPlane {
             img: String::from("Plane"),
             hp: 40,
             max_hp: 40,
+            damage: 1,
         }
     }
 
@@ -36,6 +38,7 @@ impl PaperPlane {
             img: String::from("Bullet"),
             hp: 25,
             max_hp: 25,
+            damage: 2,
         }
     }
 
@@ -47,6 +50,7 @@ impl PaperPlane {
             img: String::from("Glider"),
             hp: 50,
             max_hp: 50,
+            damage: 2,
         }
     }
 
@@ -58,6 +62,7 @@ impl PaperPlane {
             img: String::from("Blimp"),
             hp: 100,
             max_hp: 100,
+            damage: 3,
         }
     }
 
@@ -93,6 +98,11 @@ impl PaperPlane {
     /// Return the current HP of the Plane as a percentage
     pub fn hp_percent(&self) -> f64 {
         self.hp as f64 / self.max_hp as f64
+    }
+
+    /// Returns the amount of damage the plane does upon course completion
+    pub fn damage(&self) -> u32 {
+        self.damage
     }
 
     /// Reduce the HP of the Plane by a damage value

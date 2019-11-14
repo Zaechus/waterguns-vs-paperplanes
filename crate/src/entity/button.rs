@@ -75,19 +75,14 @@ impl Button {
     fn draw_text_button(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#222222"));
-        ctx.rect(
-            self.rect.x(),
-            self.rect.y(),
-            self.rect.w(),
-            self.rect.h() * 0.5,
-        );
+        ctx.rect(self.rect.x(), self.rect.y(), self.rect.w(), self.rect.h());
         ctx.fill();
         ctx.set_fill_style(&JsValue::from_str("#00ff00"));
         ctx.set_font(&format!("{}px monospace", self.rect.w() * 0.2));
         ctx.fill_text(
             &self.content,
             self.rect.x() + self.rect.w() * 0.07,
-            self.rect.y() + self.rect.h() * 0.3,
+            self.rect.y() + self.rect.h() * 0.6,
         )?;
         ctx.close_path();
         Ok(())
@@ -129,6 +124,10 @@ impl Button {
 
     pub fn button_type(&self) -> ButtonType {
         self.variant
+    }
+
+    pub fn selected(&self) -> bool {
+        self.selected
     }
     pub fn select(&mut self) {
         self.selected = true;
