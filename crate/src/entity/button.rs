@@ -57,11 +57,21 @@ impl Button {
         ctx.close_path();
     }
 
+    /// Draw a button with image content
     fn draw_image_button(
         &self,
         ctx: &CanvasRenderingContext2d,
         img: &HtmlImageElement,
     ) -> Result<(), JsValue> {
+        ctx.begin_path();
+        ctx.set_fill_style(&JsValue::from_str("#222222"));
+        ctx.rect(
+            self.rect.x(),
+            self.rect.y() - self.h() * 0.05,
+            self.rect.w(),
+            self.rect.h() + self.h() * 0.1,
+        );
+        ctx.fill();
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             img,
             self.rect.x(),
@@ -69,9 +79,11 @@ impl Button {
             self.rect.w(),
             self.rect.h(),
         )?;
+        ctx.close_path();
         Ok(())
     }
 
+    /// Draw a button with text content
     fn draw_text_button(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#222222"));

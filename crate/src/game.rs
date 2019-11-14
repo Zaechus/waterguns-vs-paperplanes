@@ -77,7 +77,8 @@ impl Game {
 
         let mut sprites = HashMap::new();
 
-        let sprite_names: [&str; 21] = [
+        let sprite_names: [&str; 22] = [
+            "Map",
             "Plane",
             "Bullet",
             "Glider",
@@ -162,7 +163,7 @@ impl Game {
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - tower_size * 2.0,
+                    canvas.width() as f64 - 10.0 - tower_size * 2.0,
                     tower_size * 0.05,
                     tower_size,
                     tower_size,
@@ -172,7 +173,7 @@ impl Game {
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - tower_size * 3.0,
+                    canvas.width() as f64 - 15.0 - tower_size * 3.0,
                     tower_size * 0.05,
                     tower_size,
                     tower_size,
@@ -331,6 +332,14 @@ impl Game {
             self.canvas.width().into(),
             self.canvas.height().into(),
         );
+
+        self.ctx.draw_image_with_html_image_element_and_dw_and_dh(
+            self.sprites.get("Map").unwrap(),
+            0.0,
+            0.0,
+            self.canvas.width().into(),
+            self.canvas.height().into(),
+        )?;
 
         self.events();
 
