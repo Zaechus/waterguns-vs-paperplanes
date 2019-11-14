@@ -13,6 +13,7 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+/// Sets the panic hook for easy web console debugging
 #[wasm_bindgen]
 pub fn init() {
     utils::set_panic_hook();

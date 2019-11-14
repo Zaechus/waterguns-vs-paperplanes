@@ -13,6 +13,3 @@ members = [
 
 [dependencies]
 rocket = "0.4"
-
-[profile.release]
-opt-level = "s"

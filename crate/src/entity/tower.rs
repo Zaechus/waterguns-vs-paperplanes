@@ -46,7 +46,7 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
-            rect: rect,
+            rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("WaterGunBlast"),
@@ -71,7 +71,7 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
-            rect: rect,
+            rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("AcidTowerBlast"),
@@ -96,7 +96,7 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
-            rect: rect,
+            rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
             blast_img: String::from("SodaMakerBlast"),
@@ -126,18 +126,16 @@ impl Tower {
         let dy = self.rect.center_y() - plane.center_y();
         let dist = (dx.powi(2) + dy.powi(2)).sqrt();
 
-        if dist < self.range {
-            if Date::now() - self.last_dmg_time > self.dmg_interval {
-                self.last_dmg_time = Date::now();
+        if dist < self.range && Date::now() - self.last_dmg_time > self.dmg_interval {
+            self.last_dmg_time = Date::now();
 
-                if plane.center_y() > self.rect.center_y() {
-                    self.rotation = PI - ((dx / dist).acos() + PI * 1.5);
-                } else {
-                    self.rotation = (dx / dist).acos() + PI * 1.5;
-                }
-
-                plane.take_damage(self.dmg);
+            if plane.center_y() > self.rect.center_y() {
+                self.rotation = PI - ((dx / dist).acos() + PI * 1.5);
+            } else {
+                self.rotation = (dx / dist).acos() + PI * 1.5;
             }
+
+            plane.take_damage(self.dmg);
         }
     }
 

@@ -34,7 +34,7 @@ impl PaperPlane {
     pub fn new_bullet(rect: Rect) -> Self {
         Self {
             rect,
-            speed: 2.0,
+            speed: 3.0,
             img: String::from("Bullet"),
             hp: 25,
             max_hp: 25,

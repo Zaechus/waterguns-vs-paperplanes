@@ -1,17 +1,17 @@
 build: fmt wasm_plain ts_plain webpack
 
-run:
+serve:
     python3 x.py
 
 wasm: fmt wasm_plain webpack
 
 ts: ts_plain webpack
 
-c:
+c: fmt
     cargo clippy
     cd crate; cargo clippy
 
-doc:
+doc: fmt
     cd crate; cargo doc --open --document-private-items
 
 webpack:

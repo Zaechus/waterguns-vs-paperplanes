@@ -240,10 +240,8 @@ impl Game {
                     }
                 }
                 button.deselect();
-                if self.mouse.y() < self.tower_size {
-                    if self.mouse.inside(button.rect()) {
-                        button.select();
-                    }
+                if self.mouse.y() < self.tower_size && self.mouse.inside(button.rect()) {
+                    button.select();
                 }
             }
         }
