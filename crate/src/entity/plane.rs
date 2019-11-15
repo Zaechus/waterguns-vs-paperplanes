@@ -59,7 +59,7 @@ impl PaperPlane {
         Self {
             rect,
             rotation: 0.0,
-            speed: 3.0,
+            speed: 1.5,
             dx: 1.5,
             dy: 0.0,
             img: String::from("Glider"),
@@ -75,7 +75,7 @@ impl PaperPlane {
         Self {
             rect,
             rotation: 0.0,
-            speed: 3.0,
+            speed: 1.0,
             dx: 1.0,
             dy: 0.0,
             img: String::from("Blimp"),
