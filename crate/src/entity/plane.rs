@@ -1,15 +1,17 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, f64::consts::PI};
 
 use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::types::Rect;
+use crate::types::{Direction, PlanePath, Rect};
 
 /// An entity spawned by the game to get to the end a map and reduce the player's HP
 #[wasm_bindgen]
 pub struct PaperPlane {
     rect: Rect,
+    rotation: f64,
+    speed: f64,
     dx: f64,
     dy: f64,
     img: String,
@@ -24,6 +26,8 @@ impl PaperPlane {
     pub fn new_basic(rect: Rect) -> Self {
         Self {
             rect,
+            rotation: 0.0,
+            speed: 1.7,
             dx: 1.7,
             dy: 0.0,
             img: String::from("Plane"),
@@ -38,6 +42,8 @@ impl PaperPlane {
     pub fn new_bullet(rect: Rect) -> Self {
         Self {
             rect,
+            rotation: 0.0,
+            speed: 3.0,
             dx: 3.0,
             dy: 0.0,
             img: String::from("Bullet"),
@@ -52,6 +58,8 @@ impl PaperPlane {
     pub fn new_glider(rect: Rect) -> Self {
         Self {
             rect,
+            rotation: 0.0,
+            speed: 3.0,
             dx: 1.5,
             dy: 0.0,
             img: String::from("Glider"),
@@ -66,6 +74,8 @@ impl PaperPlane {
     pub fn new_blimp(rect: Rect) -> Self {
         Self {
             rect,
+            rotation: 0.0,
+            speed: 3.0,
             dx: 1.0,
             dy: 0.0,
             img: String::from("Blimp"),
@@ -125,7 +135,33 @@ impl PaperPlane {
     }
 
     /// Advance the location of the Plane by one increment
-    pub fn fly(&mut self) {
+    pub fn fly(&mut self, path: &PlanePath) {
+        for turn in path.turns().iter() {
+            if turn.touching(&self.rect) {
+                match turn.direction() {
+                    Direction::Up => {
+                        self.dx = 0.0;
+                        self.dy = -self.speed;
+                        self.rotation = PI * 1.5;
+                    }
+                    Direction::Down => {
+                        self.dx = 0.0;
+                        self.dy = self.speed;
+                        self.rotation = PI * 0.5;
+                    }
+                    Direction::Left => {
+                        self.dx = -self.speed;
+                        self.rotation = PI;
+                        self.dy = 0.0;
+                    }
+                    Direction::Right => {
+                        self.dx = self.speed;
+                        self.rotation = 0.0;
+                        self.dy = 0.0;
+                    }
+                }
+            }
+        }
         self.rect
             .set_pos(self.rect.x() + self.dx, self.rect.y() + self.dy);
     }
@@ -135,8 +171,8 @@ impl PaperPlane {
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#00ff00"));
         ctx.fill_rect(
-            self.rect.x(),
-            self.rect.y(),
+            -self.rect.w() * 0.5,
+            -self.rect.h() * 0.5,
             self.rect.w() * self.hp_percent(),
             3.0,
         );
@@ -151,15 +187,17 @@ impl PaperPlane {
         ctx: &CanvasRenderingContext2d,
         sprites: &HashMap<String, HtmlImageElement>,
     ) -> Result<(), JsValue> {
+        ctx.translate(self.rect.center_x(), self.rect.center_y())?;
+        ctx.rotate(self.rotation)?;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.img).unwrap(),
-            self.rect.x(),
-            self.rect.y(),
+            -self.rect.w() * 0.5,
+            -self.rect.h() * 0.5,
             self.rect.w(),
             self.rect.h(),
         )?;
-
         self.draw_hp_bar(ctx)?;
+        ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
 
         Ok(())
     }

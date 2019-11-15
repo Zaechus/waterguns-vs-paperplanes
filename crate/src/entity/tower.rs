@@ -258,6 +258,22 @@ impl Tower {
         self.mouse_over = mouse.inside(&self.rect);
 
         if mouse.up() {
+            if let TowerStatus::Selected = self.status {
+                if mouse.inside(self.upgrade_button.rect()) {
+                    match self.variant {
+                        TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(cash),
+                        TowerType::WaterGun(WaterGun::SuperSoaker) => self.upgrade_water3(cash),
+                        TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(cash),
+                        TowerType::SodaMaker(SodaMaker::Basic) => self.upgrade_soda2(cash),
+                        TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(cash),
+                        _ => (),
+                    }
+                } else if mouse.inside(self.delete_button.rect()) {
+                    self.status = TowerStatus::Deleted;
+                    *cash += self.upgrade_cost;
+                    return;
+                }
+            }
             if self.mouse_over {
                 if let TowerStatus::Selected = self.status {
                     self.status = TowerStatus::Normal;
@@ -266,19 +282,6 @@ impl Tower {
                 }
             } else {
                 self.status = TowerStatus::Normal;
-            }
-            if mouse.inside(self.upgrade_button.rect()) {
-                match self.variant {
-                    TowerType::WaterGun(WaterGun::Basic) => self.upgrade_water2(cash),
-                    TowerType::WaterGun(WaterGun::SuperSoaker) => self.upgrade_water3(cash),
-                    TowerType::AcidTower(AcidTower::Basic) => self.upgrade_acid2(cash),
-                    TowerType::SodaMaker(SodaMaker::Basic) => self.upgrade_soda2(cash),
-                    TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(cash),
-                    _ => (),
-                }
-            } else if mouse.inside(self.delete_button.rect()) {
-                self.status = TowerStatus::Deleted;
-                *cash += self.upgrade_cost;
             }
         }
     }

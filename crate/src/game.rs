@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{ButtonType, Mouse, Rect, TowerStatus},
+    types::{ButtonType, Direction, Mouse, PlanePath, Rect, TowerStatus, Turn},
     utils::set_panic_hook,
 };
 
@@ -28,6 +28,7 @@ pub struct Game {
     planes: Vec<PaperPlane>,
     towers: Vec<Tower>,
     buttons: Vec<Button>,
+    path: PlanePath,
 
     hp: i32,
     cash: i32,
@@ -110,33 +111,33 @@ impl Game {
         let plane_size = canvas.height() as f64 * 0.05;
         let mut planes = Vec::with_capacity(100);
         for i in 0..25 {
-            planes.push(PaperPlane::new_basic(Rect::new(
-                -i as f64 * 75.0 + 50.0,
-                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+            planes.push(PaperPlane::new_bullet(Rect::new(
+                -i as f64 * plane_size * 3.0,
+                canvas.height() as f64 * 0.27,
                 plane_size,
                 plane_size,
             )));
         }
         for i in 25..50 {
-            planes.push(PaperPlane::new_bullet(Rect::new(
-                -i as f64 * 75.0 + 50.0,
-                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+            planes.push(PaperPlane::new_basic(Rect::new(
+                -i as f64 * plane_size * 4.0,
+                canvas.height() as f64 * 0.27,
                 plane_size,
                 plane_size,
             )));
         }
         for i in 50..75 {
             planes.push(PaperPlane::new_glider(Rect::new(
-                -i as f64 * 75.0 + 50.0,
-                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                -i as f64 * plane_size * 3.0,
+                canvas.height() as f64 * 0.27,
                 plane_size,
                 plane_size,
             )));
         }
         for i in 75..100 {
             planes.push(PaperPlane::new_blimp(Rect::new(
-                -i as f64 * 75.0 + 50.0,
-                canvas.height() as f64 / ((i % 2 * 2) as f64 + 1.5) + i as f64,
+                -i as f64 * plane_size * 3.0,
+                canvas.height() as f64 * 0.27,
                 plane_size,
                 plane_size,
             )));
@@ -184,6 +185,40 @@ impl Game {
         ];
 
         Self {
+            path: PlanePath::new(vec![
+                Turn::new(
+                    (canvas.width() as f64 * 0.23, canvas.height() as f64 * 0.26),
+                    Direction::Down,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.23, canvas.height() as f64 * 0.72),
+                    Direction::Right,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.43, canvas.height() as f64 * 0.72),
+                    Direction::Up,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.43, canvas.height() as f64 * 0.25),
+                    Direction::Right,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.62, canvas.height() as f64 * 0.25),
+                    Direction::Down,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.62, canvas.height() as f64 * 0.72),
+                    Direction::Right,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.85, canvas.height() as f64 * 0.72),
+                    Direction::Up,
+                ),
+                Turn::new(
+                    (canvas.width() as f64 * 0.85, canvas.height() as f64 * 0.26),
+                    Direction::Right,
+                ),
+            ]),
             tower_size,
             ui_text_size: canvas.width() as f64 * 0.015,
             canvas,
@@ -264,7 +299,7 @@ impl Game {
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
             plane.draw(&self.ctx, &self.sprites).expect("Plane draw");
-            plane.fly();
+            plane.fly(&self.path);
         }
     }
 
@@ -303,10 +338,10 @@ impl Game {
         self.ctx
             .set_font(&format!("{}px sans-serif", self.ui_text_size));
         self.ctx
-            .fill_text(&format!("HP: {}", self.hp), 10.0, 30.0)
+            .fill_text(&format!("❤️ : {}", self.hp), 10.0, 30.0)
             .expect("display hp");
         self.ctx
-            .fill_text(&format!("Cash: {}", self.cash), 10.0, 70.0)
+            .fill_text(&format!("💲 : {}", self.cash), 10.0, 70.0)
             .expect("display cash");
         self.ctx.close_path();
     }
