@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{ButtonType, Mouse, Rect},
+    types::{ButtonType, Mouse, Rect, TowerStatus},
     utils::set_panic_hook,
 };
 
@@ -269,11 +269,23 @@ impl Game {
     }
 
     /// Remove planes if they complete the track or get destroyed
+    fn remove_towers(&mut self) {
+        let mut i = 0;
+        while i != self.towers.len() {
+            if let TowerStatus::Deleted = self.towers[i].status() {
+                self.towers.remove(i);
+            } else {
+                i += 1;
+            }
+        }
+    }
+
+    /// Remove planes if they complete the track or get destroyed
     fn remove_planes(&mut self) {
         let mut i = 0;
         while i != self.planes.len() {
             if self.planes[i].hp() <= 0 {
-                self.cash += 10;
+                self.cash += self.planes[i].bounty() as i32;
                 self.planes.remove(i);
             } else if self.planes[i].x() >= self.canvas.width().into() {
                 self.hp -= self.planes[i].damage() as i32;
@@ -346,9 +358,11 @@ impl Game {
         self.render_towers();
         self.render_planes();
 
+        self.remove_towers();
         self.remove_planes();
 
         self.render_top_bar().expect("render top bar");
+
         Ok(())
     }
 }

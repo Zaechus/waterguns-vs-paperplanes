@@ -8,7 +8,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane},
-    types::{AcidTower, Mouse, Rect, SodaMaker, TowerType, WaterGun},
+    types::{AcidTower, Mouse, Rect, SodaMaker, TowerStatus, TowerType, WaterGun},
 };
 
 /// An entity the user spends cash to create in order to destroy Planes
@@ -23,16 +23,18 @@ pub struct Tower {
     blast_img: String,
     top_img: String,
 
-    upgrade_button: Button,
     upgrade_cost: i32,
+
+    upgrade_button: Button,
+    delete_button: Button,
 
     dmg: i32,
     dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,
 
+    status: TowerStatus,
     mouse_over: bool,
-    context_open: bool,
 }
 
 impl Tower {
@@ -46,6 +48,12 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
+            delete_button: Button::new_delete(Rect::new(
+                rect.x(),
+                rect.y() + rect.h() * 1.3,
+                rect.w(),
+                rect.h() * 0.5,
+            )),
             range: rect.h() * 2.5,
             rect,
             rotation: 0.0,
@@ -56,8 +64,8 @@ impl Tower {
             dmg: 10,
             dmg_interval: 700.0,
             last_dmg_time: 0.0,
+            status: TowerStatus::Normal,
             mouse_over: false,
-            context_open: false,
         }
     }
 
@@ -71,6 +79,12 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
+            delete_button: Button::new_delete(Rect::new(
+                rect.x(),
+                rect.y() + rect.h() * 1.3,
+                rect.w(),
+                rect.h() * 0.5,
+            )),
             range: rect.h() * 1.5,
             rect,
             rotation: 0.0,
@@ -81,8 +95,8 @@ impl Tower {
             dmg: 1,
             dmg_interval: 100.0,
             last_dmg_time: 0.0,
+            status: TowerStatus::Normal,
             mouse_over: false,
-            context_open: false,
         }
     }
 
@@ -96,6 +110,12 @@ impl Tower {
                 rect.w(),
                 rect.h() * 0.5,
             )),
+            delete_button: Button::new_delete(Rect::new(
+                rect.x(),
+                rect.y() + rect.h() * 1.3,
+                rect.w(),
+                rect.h() * 0.5,
+            )),
             range: rect.h() * 3.0,
             rect,
             rotation: 0.0,
@@ -106,8 +126,8 @@ impl Tower {
             dmg: 20,
             dmg_interval: 1000.0,
             last_dmg_time: 0.0,
+            status: TowerStatus::Normal,
             mouse_over: false,
-            context_open: false,
         }
     }
 
@@ -118,6 +138,11 @@ impl Tower {
     /// Return the y-coordinate of the center of the tower
     pub fn center_y(&self) -> f64 {
         self.rect.center_y()
+    }
+
+    /// Returns the Tower's TowerStatus
+    pub fn status(&self) -> TowerStatus {
+        self.status
     }
 
     /// Takes a reference to a Plane and applies damage if conditions are met
@@ -218,10 +243,11 @@ impl Tower {
             self.draw_selection(ctx)?;
         }
 
-        if self.context_open {
+        if let TowerStatus::Selected = self.status {
             self.draw_selection(ctx)?;
 
             self.upgrade_button.draw(ctx, sprites)?;
+            self.delete_button.draw(ctx, sprites)?;
         }
 
         Ok(())
@@ -233,9 +259,13 @@ impl Tower {
 
         if mouse.up() {
             if self.mouse_over {
-                self.context_open = !self.context_open;
+                if let TowerStatus::Selected = self.status {
+                    self.status = TowerStatus::Normal;
+                } else {
+                    self.status = TowerStatus::Selected;
+                }
             } else {
-                self.context_open = false;
+                self.status = TowerStatus::Normal;
             }
             if mouse.inside(self.upgrade_button.rect()) {
                 match self.variant {
@@ -246,6 +276,9 @@ impl Tower {
                     TowerType::SodaMaker(SodaMaker::SparklingWater) => self.upgrade_soda3(cash),
                     _ => (),
                 }
+            } else if mouse.inside(self.delete_button.rect()) {
+                self.status = TowerStatus::Deleted;
+                *cash += self.upgrade_cost;
             }
         }
     }

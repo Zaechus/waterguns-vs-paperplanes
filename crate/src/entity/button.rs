@@ -44,6 +44,7 @@ impl Button {
         )
     }
 
+    /// Draws the selection highlight for the Button
     fn draw_selection(&self, ctx: &CanvasRenderingContext2d) {
         ctx.begin_path();
         ctx.set_stroke_style(&JsValue::from_str("#00ff00"));
@@ -118,32 +119,40 @@ impl Button {
         Ok(())
     }
 
+    /// Returns the x position of the Button
     pub fn x(&self) -> f64 {
         self.rect.x()
     }
+    /// Returns the y position of the Button
     pub fn y(&self) -> f64 {
         self.rect.y()
     }
+    /// Returns the width of the Button
     pub fn w(&self) -> f64 {
         self.rect.w()
     }
+    /// Returns the height of the Button
     pub fn h(&self) -> f64 {
         self.rect.h()
     }
+    /// Returns a reference to the Rect field of the Button
     pub fn rect(&self) -> &Rect {
         &self.rect
     }
 
+    /// Returns the type of the Button
     pub fn button_type(&self) -> ButtonType {
         self.variant
     }
-
+    /// Returns whether or not the Button is selected
     pub fn selected(&self) -> bool {
         self.selected
     }
+    /// Set the selected property of the Button to true
     pub fn select(&mut self) {
         self.selected = true;
     }
+    /// Set the selected property of the Button to false
     pub fn deselect(&mut self) {
         self.selected = false;
     }
