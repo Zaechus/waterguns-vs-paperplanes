@@ -26,10 +26,12 @@ impl Turn {
         }
     }
 
+    /// Returns the Direction that the Turn points
     pub fn direction(&self) -> Direction {
         self.direction
     }
 
+    /// Returns true if the referenced Rect passes into the turn
     pub fn touching(&self, rect: &Rect) -> bool {
         rect.x() > self.x - 10.0
             && rect.x() < self.x + 10.0
@@ -49,6 +51,7 @@ impl PlanePath {
         Self { turns }
     }
 
+    /// Returns a reference to the Turns
     pub fn turns(&self) -> &[Turn] {
         &self.turns
     }
