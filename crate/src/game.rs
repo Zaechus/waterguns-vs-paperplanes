@@ -220,7 +220,7 @@ impl Game {
                 ),
             ]),
             tower_size,
-            ui_text_size: canvas.width() as f64 * 0.015,
+            ui_text_size: canvas.height() as f64 * 0.03,
             canvas,
             ctx,
             mouse: Mouse::new(),
@@ -338,10 +338,10 @@ impl Game {
         self.ctx
             .set_font(&format!("{}px sans-serif", self.ui_text_size));
         self.ctx
-            .fill_text(&format!("❤️ : {}", self.hp), 10.0, 30.0)
+            .fill_text(&format!("❤️ : {}", self.hp), 10.0, self.ui_text_size + 5.0)
             .expect("display hp");
         self.ctx
-            .fill_text(&format!("💲 : {}", self.cash), 10.0, 70.0)
+            .fill_text(&format!("$  : {}", self.cash), 10.0, self.tower_size - 5.0)
             .expect("display cash");
         self.ctx.close_path();
     }
