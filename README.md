@@ -1,4 +1,7 @@
 # 🔫 Water Guns vs Paper Planes ✈️
+
+![wide logo](./.wide-logo.png?raw=true)
+
 Water Guns vs Paper Planes is a tower defense game where players build water gun towers to defend against different types of paper airplanes. WvP aims to be a simple and enjoyable tower defense game that players can easily access online on either their phone or computer.
 
 ### Running the game
