@@ -187,11 +187,11 @@ impl Game {
         Self {
             path: PlanePath::new(vec![
                 Turn::new(
-                    (canvas.width() as f64 * 0.23, canvas.height() as f64 * 0.26),
+                    (canvas.width() as f64 * 0.22, canvas.height() as f64 * 0.26),
                     Direction::Down,
                 ),
                 Turn::new(
-                    (canvas.width() as f64 * 0.23, canvas.height() as f64 * 0.72),
+                    (canvas.width() as f64 * 0.22, canvas.height() as f64 * 0.72),
                     Direction::Right,
                 ),
                 Turn::new(
