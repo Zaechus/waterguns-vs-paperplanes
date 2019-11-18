@@ -28,7 +28,7 @@ pub struct Tower {
     upgrade_button: Button,
     delete_button: Button,
 
-    dmg: i32,
+    dmg: u32,
     dmg_interval: f64,
     range: f64,
     last_dmg_time: f64,

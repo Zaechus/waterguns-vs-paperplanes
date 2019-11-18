@@ -15,7 +15,7 @@ pub struct PaperPlane {
     dx: f64,
     dy: f64,
     img: String,
-    hp: i32,
+    hp: u32,
     max_hp: u32,
     damage: u32,
     bounty: u32,
@@ -80,7 +80,7 @@ impl PaperPlane {
             dy: 0.0,
             img: String::from("Blimp"),
             hp: 200,
-            max_hp: 100,
+            max_hp: 200,
             damage: 3,
             bounty: 10,
         }
@@ -112,7 +112,7 @@ impl PaperPlane {
     }
 
     /// Return current HP of the Plane
-    pub fn hp(&self) -> i32 {
+    pub fn hp(&self) -> u32 {
         self.hp
     }
     /// Return the current HP of the Plane as a percentage
@@ -130,8 +130,12 @@ impl PaperPlane {
     }
 
     /// Reduce the HP of the Plane by a damage value
-    pub fn take_damage(&mut self, dmg: i32) {
-        self.hp -= dmg;
+    pub fn take_damage(&mut self, dmg: u32) {
+        self.hp = if let Some(hp) = self.hp.checked_sub(dmg) {
+            hp
+        } else {
+            0
+        };
     }
 
     /// Advance the location of the Plane by one increment

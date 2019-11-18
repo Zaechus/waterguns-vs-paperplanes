@@ -111,7 +111,7 @@ impl Game {
         let plane_size = canvas.height() as f64 * 0.05;
         let mut planes = Vec::with_capacity(100);
         for i in 0..25 {
-            planes.push(PaperPlane::new_bullet(Rect::new(
+            planes.push(PaperPlane::new_blimp(Rect::new(
                 -i as f64 * plane_size * 3.0,
                 canvas.height() as f64 * 0.27,
                 plane_size,
