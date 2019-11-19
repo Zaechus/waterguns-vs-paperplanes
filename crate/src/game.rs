@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
+use js_sys::Date;
+
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
@@ -17,6 +19,7 @@ const SODA_COST: i32 = 50;
 /// A struct that handles the workings of the game
 #[wasm_bindgen]
 pub struct Game {
+    plane_size: f64,
     tower_size: f64,
     ui_text_size: f64,
 
@@ -30,6 +33,8 @@ pub struct Game {
     buttons: Vec<Button>,
     path: PlanePath,
 
+    round: u32,
+    start_time: f64,
     hp: i32,
     cash: i32,
 }
@@ -108,49 +113,7 @@ impl Game {
             sprites.insert(String::from(*sprite), img);
         }
 
-        let plane_size = canvas.height() as f64 * 0.05;
-        let mut planes = Vec::with_capacity(100);
-        for i in 0..25 {
-            planes.push(PaperPlane::new_bullet(Rect::new(
-                -i as f64 * plane_size * 3.0,
-                canvas.height() as f64 * 0.27,
-                plane_size,
-                plane_size,
-            )));
-        }
-        for i in 25..50 {
-            planes.push(PaperPlane::new_basic(Rect::new(
-                -i as f64 * plane_size * 4.0,
-                canvas.height() as f64 * 0.27,
-                plane_size,
-                plane_size,
-            )));
-        }
-        for i in 50..75 {
-            planes.push(PaperPlane::new_glider(Rect::new(
-                -i as f64 * plane_size * 3.0,
-                canvas.height() as f64 * 0.27,
-                plane_size,
-                plane_size,
-            )));
-        }
-        for i in 75..100 {
-            planes.push(PaperPlane::new_blimp(Rect::new(
-                -i as f64 * plane_size * 3.0,
-                canvas.height() as f64 * 0.27,
-                plane_size,
-                plane_size,
-            )));
-        }
-
         let tower_size = canvas.height() as f64 * 0.08;
-        let towers = vec![Tower::new_water_gun(Rect::new(
-            canvas.width() as f64 / 2.0,
-            canvas.height() as f64 / 2.0,
-            tower_size,
-            tower_size,
-        ))];
-
         let buttons = vec![
             Button::new(
                 Rect::new(
@@ -219,17 +182,47 @@ impl Game {
                     Direction::Right,
                 ),
             ]),
+            plane_size: canvas.height() as f64 * 0.05,
             tower_size,
             ui_text_size: canvas.height() as f64 * 0.03,
             canvas,
             ctx,
             mouse: Mouse::new(),
             sprites,
-            planes,
-            towers,
+            planes: Vec::with_capacity(50),
+            towers: Vec::with_capacity(10),
             buttons,
+            round: 0,
+            start_time: Date::now(),
             hp: 100,
             cash: 100,
+        }
+    }
+
+    fn update_round(&mut self) {
+        let elapsed = Date::now() - self.start_time;
+        self.round = if elapsed >= 10000.0 && self.round == 1 {
+            2
+        } else if elapsed >= 1000.0 && self.round == 0 {
+            1
+        } else {
+            self.round
+        };
+    }
+
+    fn make_planes(&mut self) {
+        match self.round {
+            1 => {
+                for x in 0..25 {
+                    self.planes.push(PaperPlane::new_bullet(Rect::new(
+                        self.plane_size * -x as f64,
+                        self.canvas.height() as f64 * 0.26,
+                        self.plane_size,
+                        self.plane_size,
+                    )));
+                }
+            }
+            _ => (),
         }
     }
 
@@ -387,6 +380,9 @@ impl Game {
             self.canvas.width().into(),
             self.canvas.height().into(),
         )?;
+
+        self.update_round();
+        self.make_planes();
 
         self.events();
 
