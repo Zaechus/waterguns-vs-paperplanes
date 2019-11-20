@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
-use js_sys::Date;
-
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
@@ -23,7 +21,8 @@ pub struct Game {
     tower_size: f64,
     ui_text_size: f64,
 
-    bg_ctx: CanvasRenderingContext2d,
+    map_canvas: HtmlCanvasElement,
+    map_ctx: CanvasRenderingContext2d,
     fg_ctx: CanvasRenderingContext2d,
     width: u32,
     height: u32,
@@ -36,7 +35,8 @@ pub struct Game {
     path: PlanePath,
 
     round: u32,
-    round_start_time: f64,
+    round_start_tic: u32,
+    tic: u32,
     hp: i32,
     cash: i32,
 }
@@ -47,70 +47,24 @@ impl Game {
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
-
-        let window_width = window()
-            .unwrap()
-            .inner_width()
-            .expect("inner width")
-            .as_f64()
-            .unwrap() as u32;
-        let window_height = window()
-            .unwrap()
-            .inner_height()
-            .expect("inner height")
-            .as_f64()
-            .unwrap() as u32;
-
-        let bg_canvas = document
-            .create_element("canvas")
-            .expect("create canvas")
-            .dyn_into::<HtmlCanvasElement>()
-            .expect("dyn_into canvas element");
-        bg_canvas.set_width(window_width);
-        bg_canvas.set_height(window_height);
-        bg_canvas
-            .style()
-            .set_property("position", "absolute")
-            .unwrap();
-        bg_canvas.style().set_property("z-index", "0").unwrap();
+        let window_width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
+        let window_height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
 
         let fg_canvas = document
             .create_element("canvas")
-            .expect("create canvas")
+            .unwrap()
             .dyn_into::<HtmlCanvasElement>()
-            .expect("dyn_into canvas element");
+            .unwrap();
         fg_canvas.set_width(window_width);
         fg_canvas.set_height(window_height);
-        fg_canvas
-            .style()
-            .set_property("position", "absolute")
-            .unwrap();
-        fg_canvas.style().set_property("z-index", "1").unwrap();
-
-        document
-            .body()
-            .unwrap()
-            .append_child(&bg_canvas)
-            .expect("doc append bg_canvas");
-        document
-            .body()
-            .unwrap()
-            .append_child(&fg_canvas)
-            .expect("doc append fg_canvas");
-
-        let bg_ctx = bg_canvas
-            .get_context("2d")
-            .expect("get 2d ctx")
-            .unwrap()
-            .dyn_into::<CanvasRenderingContext2d>()
-            .expect("dyn_into 2d ctx");
+        fg_canvas.style().set_property("z-index", "2").unwrap();
+        document.body().unwrap().append_child(&fg_canvas).unwrap();
         let fg_ctx = fg_canvas
             .get_context("2d")
-            .expect("get 2d ctx")
+            .unwrap()
             .unwrap()
             .dyn_into::<CanvasRenderingContext2d>()
-            .expect("dyn_into 2d ctx");
-
+            .unwrap();
         fg_ctx.set_font("36px monospace");
 
         let width = fg_canvas.width();
@@ -147,6 +101,37 @@ impl Game {
             img.set_src(&format!("static/{}.png", sprite));
             sprites.insert(String::from(*sprite), img);
         }
+
+        let map_canvas = document
+            .create_element("canvas")
+            .unwrap()
+            .dyn_into::<HtmlCanvasElement>()
+            .unwrap();
+        // map_canvas.set_width(64);
+        // map_canvas.set_height(64);
+        map_canvas.set_width(width);
+        map_canvas.set_height(height);
+        map_canvas
+            .style()
+            .set_property("background", "purple")
+            .unwrap();
+        map_canvas.style().set_property("z-index", "1").unwrap();
+        document.body().unwrap().append_child(&map_canvas).unwrap();
+        let map_ctx = map_canvas
+            .get_context("2d")
+            .expect("get 2d ctx")
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()
+            .unwrap();
+        map_ctx
+            .draw_image_with_html_image_element_and_dw_and_dh(
+                sprites.get("Plane").unwrap(),
+                0.0,
+                0.0,
+                width as f64,
+                height as f64,
+            )
+            .expect("drawing Map");
 
         let tower_size = height as f64 * 0.08;
         let buttons = vec![
@@ -210,7 +195,8 @@ impl Game {
             ui_text_size: height as f64 * 0.03,
             width,
             height,
-            bg_ctx,
+            map_canvas,
+            map_ctx,
             fg_ctx,
             mouse: Mouse::new(),
             sprites,
@@ -218,7 +204,8 @@ impl Game {
             towers: Vec::with_capacity(10),
             buttons,
             round: 1,
-            round_start_time: Date::now(),
+            round_start_tic: 0,
+            tic: 1,
             hp: 100,
             cash: 100,
         }
@@ -268,27 +255,31 @@ impl Game {
     }
 
     fn make_planes(&mut self) {
-        let elapsed = Date::now() - self.round_start_time;
+        let elapsed = self.tic - self.round_start_tic;
 
         match self.round {
-            1 if elapsed >= 1000.0 => {
-                self.round_start_time = Date::now();
+            1 if elapsed >= 100 => {
+                self.round_start_tic = 0;
+                self.tic = 0;
                 self.spawn_bullets(25, 2.0);
                 self.round += 1;
             }
-            2 if elapsed >= 10000.0 => {
-                self.round_start_time = Date::now();
+            2 if elapsed >= 1000 => {
+                self.round_start_tic = 0;
+                self.tic = 0;
                 self.spawn_basics(25, 2.0);
                 self.round += 1;
             }
-            3 if elapsed >= 10000.0 => {
-                self.round_start_time = Date::now();
+            3 if elapsed >= 1000 => {
+                self.round_start_tic = 0;
+                self.tic = 0;
                 self.spawn_bullets(25, 2.0);
                 self.spawn_gliders(25, 2.0);
                 self.round += 1;
             }
-            4 if elapsed >= 10000.0 => {
-                self.round_start_time = Date::now();
+            4 if elapsed >= 1000 => {
+                self.round_start_tic = 0;
+                self.tic = 0;
                 self.spawn_blimps(25, 2.0);
                 self.round += 1;
             }
@@ -382,7 +373,7 @@ impl Game {
     fn remove_planes(&mut self) {
         let mut i = 0;
         while i != self.planes.len() {
-            if self.planes[i].hp() <= 0 {
+            if self.planes[i].hp() == 0 {
                 self.cash += self.planes[i].bounty() as i32;
                 self.planes.remove(i);
             } else if self.planes[i].x() >= self.width.into() {
@@ -439,14 +430,17 @@ impl Game {
         self.fg_ctx
             .clear_rect(0.0, 0.0, self.width.into(), self.height.into());
 
+        // self.map_ctx
+        //     .draw_image_with_html_image_element_and_dw_and_dh(
+        //         self.sprites.get("Plane").unwrap(),
+        //         0.0,
+        //         0.0,
+        //         self.width as f64,
+        //         self.height as f64,
+        //     )
+        //     .expect("drawing Map");
         self.fg_ctx
-            .draw_image_with_html_image_element_and_dw_and_dh(
-                self.sprites.get("Map").unwrap(),
-                0.0,
-                0.0,
-                self.width as f64,
-                self.height as f64,
-            )
+            .draw_image_with_html_canvas_element(&self.map_canvas, 10.0, 10.0)
             .expect("drawing Map");
 
         self.make_planes();
@@ -460,6 +454,8 @@ impl Game {
         self.remove_planes();
 
         self.render_top_bar().expect("render top bar");
+
+        self.tic += 1;
 
         Ok(())
     }
