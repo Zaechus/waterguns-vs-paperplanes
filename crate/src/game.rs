@@ -23,8 +23,10 @@ pub struct Game {
     tower_size: f64,
     ui_text_size: f64,
 
-    canvas: HtmlCanvasElement,
-    ctx: CanvasRenderingContext2d,
+    bg_ctx: CanvasRenderingContext2d,
+    fg_ctx: CanvasRenderingContext2d,
+    width: u32,
+    height: u32,
     mouse: Mouse,
 
     sprites: HashMap<String, HtmlImageElement>,
@@ -34,7 +36,7 @@ pub struct Game {
     path: PlanePath,
 
     round: u32,
-    start_time: f64,
+    round_start_time: f64,
     hp: i32,
     cash: i32,
 }
@@ -45,41 +47,74 @@ impl Game {
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
-        let canvas = document
+
+        let window_width = window()
+            .unwrap()
+            .inner_width()
+            .expect("inner width")
+            .as_f64()
+            .unwrap() as u32;
+        let window_height = window()
+            .unwrap()
+            .inner_height()
+            .expect("inner height")
+            .as_f64()
+            .unwrap() as u32;
+
+        let bg_canvas = document
             .create_element("canvas")
             .expect("create canvas")
             .dyn_into::<HtmlCanvasElement>()
             .expect("dyn_into canvas element");
+        bg_canvas.set_width(window_width);
+        bg_canvas.set_height(window_height);
+        bg_canvas
+            .style()
+            .set_property("position", "absolute")
+            .unwrap();
+        bg_canvas.style().set_property("z-index", "0").unwrap();
+
+        let fg_canvas = document
+            .create_element("canvas")
+            .expect("create canvas")
+            .dyn_into::<HtmlCanvasElement>()
+            .expect("dyn_into canvas element");
+        fg_canvas.set_width(window_width);
+        fg_canvas.set_height(window_height);
+        fg_canvas
+            .style()
+            .set_property("position", "absolute")
+            .unwrap();
+        fg_canvas.style().set_property("z-index", "1").unwrap();
+
         document
             .body()
             .unwrap()
-            .append_child(&canvas)
-            .expect("doc append canvas");
-        canvas.set_width(
-            window()
-                .unwrap()
-                .inner_width()
-                .expect("inner width")
-                .as_f64()
-                .unwrap() as u32,
-        );
-        canvas.set_height(
-            window()
-                .unwrap()
-                .inner_height()
-                .expect("inner height")
-                .as_f64()
-                .unwrap() as u32,
-        );
+            .append_child(&bg_canvas)
+            .expect("doc append bg_canvas");
+        document
+            .body()
+            .unwrap()
+            .append_child(&fg_canvas)
+            .expect("doc append fg_canvas");
 
-        let ctx = canvas
+        let bg_ctx = bg_canvas
+            .get_context("2d")
+            .expect("get 2d ctx")
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()
+            .expect("dyn_into 2d ctx");
+        let fg_ctx = fg_canvas
             .get_context("2d")
             .expect("get 2d ctx")
             .unwrap()
             .dyn_into::<CanvasRenderingContext2d>()
             .expect("dyn_into 2d ctx");
 
-        ctx.set_font("36px monospace");
+        fg_ctx.set_font("36px monospace");
+
+        let width = fg_canvas.width();
+        let height = fg_canvas.height();
 
         let mut sprites = HashMap::new();
 
@@ -113,11 +148,11 @@ impl Game {
             sprites.insert(String::from(*sprite), img);
         }
 
-        let tower_size = canvas.height() as f64 * 0.08;
+        let tower_size = height as f64 * 0.08;
         let buttons = vec![
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 5.0 - tower_size,
+                    width as f64 - 5.0 - tower_size,
                     tower_size * 0.05,
                     tower_size,
                     tower_size,
@@ -127,7 +162,7 @@ impl Game {
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 10.0 - tower_size * 2.0,
+                    width as f64 - 10.0 - tower_size * 2.0,
                     tower_size * 0.05,
                     tower_size,
                     tower_size,
@@ -137,7 +172,7 @@ impl Game {
             ),
             Button::new(
                 Rect::new(
-                    canvas.width() as f64 - 15.0 - tower_size * 3.0,
+                    width as f64 - 15.0 - tower_size * 3.0,
                     tower_size * 0.05,
                     tower_size,
                     tower_size,
@@ -149,78 +184,113 @@ impl Game {
 
         Self {
             path: PlanePath::new(vec![
+                Turn::new((width as f64 * 0.22, height as f64 * 0.26), Direction::Down),
                 Turn::new(
-                    (canvas.width() as f64 * 0.22, canvas.height() as f64 * 0.26),
-                    Direction::Down,
-                ),
-                Turn::new(
-                    (canvas.width() as f64 * 0.22, canvas.height() as f64 * 0.72),
+                    (width as f64 * 0.22, height as f64 * 0.72),
                     Direction::Right,
                 ),
+                Turn::new((width as f64 * 0.43, height as f64 * 0.72), Direction::Up),
                 Turn::new(
-                    (canvas.width() as f64 * 0.43, canvas.height() as f64 * 0.72),
-                    Direction::Up,
-                ),
-                Turn::new(
-                    (canvas.width() as f64 * 0.43, canvas.height() as f64 * 0.25),
+                    (width as f64 * 0.43, height as f64 * 0.25),
                     Direction::Right,
                 ),
+                Turn::new((width as f64 * 0.62, height as f64 * 0.25), Direction::Down),
                 Turn::new(
-                    (canvas.width() as f64 * 0.62, canvas.height() as f64 * 0.25),
-                    Direction::Down,
-                ),
-                Turn::new(
-                    (canvas.width() as f64 * 0.62, canvas.height() as f64 * 0.72),
+                    (width as f64 * 0.62, height as f64 * 0.72),
                     Direction::Right,
                 ),
+                Turn::new((width as f64 * 0.85, height as f64 * 0.72), Direction::Up),
                 Turn::new(
-                    (canvas.width() as f64 * 0.85, canvas.height() as f64 * 0.72),
-                    Direction::Up,
-                ),
-                Turn::new(
-                    (canvas.width() as f64 * 0.85, canvas.height() as f64 * 0.26),
+                    (width as f64 * 0.85, height as f64 * 0.26),
                     Direction::Right,
                 ),
             ]),
-            plane_size: canvas.height() as f64 * 0.05,
+            plane_size: height as f64 * 0.05,
             tower_size,
-            ui_text_size: canvas.height() as f64 * 0.03,
-            canvas,
-            ctx,
+            ui_text_size: height as f64 * 0.03,
+            width,
+            height,
+            bg_ctx,
+            fg_ctx,
             mouse: Mouse::new(),
             sprites,
             planes: Vec::with_capacity(50),
             towers: Vec::with_capacity(10),
             buttons,
-            round: 0,
-            start_time: Date::now(),
+            round: 1,
+            round_start_time: Date::now(),
             hp: 100,
             cash: 100,
         }
     }
+    fn spawn_basics(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes.push(PaperPlane::new_basic(Rect::new(
+                self.plane_size * -x as f64 * spacing,
+                self.height as f64 * 0.26,
+                self.plane_size,
+                self.plane_size,
+            )));
+        }
+    }
 
-    fn update_round(&mut self) {
-        let elapsed = Date::now() - self.start_time;
-        self.round = if elapsed >= 10000.0 && self.round == 1 {
-            2
-        } else if elapsed >= 1000.0 && self.round == 0 {
-            1
-        } else {
-            self.round
-        };
+    fn spawn_bullets(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes.push(PaperPlane::new_bullet(Rect::new(
+                self.plane_size * -x as f64 * spacing,
+                self.height as f64 * 0.26,
+                self.plane_size,
+                self.plane_size,
+            )));
+        }
+    }
+
+    fn spawn_gliders(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes.push(PaperPlane::new_glider(Rect::new(
+                self.plane_size * -x as f64 * spacing,
+                self.height as f64 * 0.26,
+                self.plane_size,
+                self.plane_size,
+            )));
+        }
+    }
+
+    fn spawn_blimps(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes.push(PaperPlane::new_blimp(Rect::new(
+                self.plane_size * -x as f64 * spacing,
+                self.height as f64 * 0.26,
+                self.plane_size,
+                self.plane_size,
+            )));
+        }
     }
 
     fn make_planes(&mut self) {
+        let elapsed = Date::now() - self.round_start_time;
+
         match self.round {
-            1 => {
-                for x in 0..25 {
-                    self.planes.push(PaperPlane::new_bullet(Rect::new(
-                        self.plane_size * -x as f64,
-                        self.canvas.height() as f64 * 0.26,
-                        self.plane_size,
-                        self.plane_size,
-                    )));
-                }
+            1 if elapsed >= 1000.0 => {
+                self.round_start_time = Date::now();
+                self.spawn_bullets(25, 2.0);
+                self.round += 1;
+            }
+            2 if elapsed >= 10000.0 => {
+                self.round_start_time = Date::now();
+                self.spawn_basics(25, 2.0);
+                self.round += 1;
+            }
+            3 if elapsed >= 10000.0 => {
+                self.round_start_time = Date::now();
+                self.spawn_bullets(25, 2.0);
+                self.spawn_gliders(25, 2.0);
+                self.round += 1;
+            }
+            4 if elapsed >= 10000.0 => {
+                self.round_start_time = Date::now();
+                self.spawn_blimps(25, 2.0);
+                self.round += 1;
             }
             _ => (),
         }
@@ -280,7 +350,7 @@ impl Game {
     fn render_towers(&mut self) {
         for tower in self.towers.iter_mut() {
             tower.events(&self.mouse, &mut self.cash);
-            tower.draw(&self.ctx, &self.sprites).expect("tower draw");
+            tower.draw(&self.fg_ctx, &self.sprites).expect("tower draw");
 
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
@@ -291,7 +361,7 @@ impl Game {
     /// Render all planes
     fn render_planes(&mut self) {
         for plane in self.planes.iter_mut() {
-            plane.draw(&self.ctx, &self.sprites).expect("Plane draw");
+            plane.draw(&self.fg_ctx, &self.sprites).expect("Plane draw");
             plane.fly(&self.path);
         }
     }
@@ -315,7 +385,7 @@ impl Game {
             if self.planes[i].hp() <= 0 {
                 self.cash += self.planes[i].bounty() as i32;
                 self.planes.remove(i);
-            } else if self.planes[i].x() >= self.canvas.width().into() {
+            } else if self.planes[i].x() >= self.width.into() {
                 self.hp -= self.planes[i].damage() as i32;
                 self.planes.remove(i);
             } else {
@@ -326,30 +396,30 @@ impl Game {
 
     /// Render text found in the top bar
     fn render_text(&self) {
-        self.ctx.begin_path();
-        self.ctx.set_fill_style(&JsValue::from_str("#111111"));
-        self.ctx
+        self.fg_ctx.begin_path();
+        self.fg_ctx.set_fill_style(&JsValue::from_str("#111111"));
+        self.fg_ctx
             .set_font(&format!("{}px sans-serif", self.ui_text_size));
-        self.ctx
+        self.fg_ctx
             .fill_text(&format!("❤️ : {}", self.hp), 10.0, self.ui_text_size + 5.0)
             .expect("display hp");
-        self.ctx
+        self.fg_ctx
             .fill_text(&format!("$  : {}", self.cash), 10.0, self.tower_size - 5.0)
             .expect("display cash");
-        self.ctx.close_path();
+        self.fg_ctx.close_path();
     }
 
     /// Render the top bar
     fn render_top_bar(&self) -> Result<(), JsValue> {
-        self.ctx.begin_path();
-        self.ctx.set_fill_style(&JsValue::from_str("#555555"));
-        self.ctx
-            .rect(0.0, 0.0, self.canvas.width() as f64, self.tower_size + 10.0);
-        self.ctx.fill();
-        self.ctx.close_path();
+        self.fg_ctx.begin_path();
+        self.fg_ctx.set_fill_style(&JsValue::from_str("#555555"));
+        self.fg_ctx
+            .rect(0.0, 0.0, self.width as f64, self.tower_size + 10.0);
+        self.fg_ctx.fill();
+        self.fg_ctx.close_path();
 
         for button in self.buttons.iter() {
-            button.draw(&self.ctx, &self.sprites)?;
+            button.draw(&self.fg_ctx, &self.sprites)?;
         }
 
         self.render_text();
@@ -366,22 +436,19 @@ impl Game {
     ) -> Result<(), JsValue> {
         self.mouse.update(mouse_x, mouse_y, mouse_down, mouse_up);
 
-        self.ctx.clear_rect(
-            0.0,
-            0.0,
-            self.canvas.width().into(),
-            self.canvas.height().into(),
-        );
+        self.fg_ctx
+            .clear_rect(0.0, 0.0, self.width.into(), self.height.into());
 
-        self.ctx.draw_image_with_html_image_element_and_dw_and_dh(
-            self.sprites.get("Map").unwrap(),
-            0.0,
-            0.0,
-            self.canvas.width().into(),
-            self.canvas.height().into(),
-        )?;
+        self.fg_ctx
+            .draw_image_with_html_image_element_and_dw_and_dh(
+                self.sprites.get("Map").unwrap(),
+                0.0,
+                0.0,
+                self.width as f64,
+                self.height as f64,
+            )
+            .expect("drawing Map");
 
-        self.update_round();
         self.make_planes();
 
         self.events();
