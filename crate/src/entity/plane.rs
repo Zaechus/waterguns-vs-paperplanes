@@ -175,9 +175,9 @@ impl PaperPlane {
         ctx.begin_path();
         ctx.set_fill_style(&JsValue::from_str("#00ff00"));
         ctx.fill_rect(
-            -self.rect.w() * 0.5,
-            -self.rect.h() * 0.5,
-            self.rect.w() * self.hp_percent(),
+            (-self.rect.w() * 0.5).floor(),
+            (-self.rect.h() * 0.5).floor(),
+            (self.rect.w() * self.hp_percent()).floor(),
             3.0,
         );
         ctx.close_path();
@@ -195,10 +195,10 @@ impl PaperPlane {
         ctx.rotate(self.rotation)?;
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.img).unwrap(),
-            -self.rect.w() * 0.5,
-            -self.rect.h() * 0.5,
-            self.rect.w(),
-            self.rect.h(),
+            (-self.rect.w() * 0.5).floor(),
+            (-self.rect.h() * 0.5).floor(),
+            self.rect.w().floor(),
+            self.rect.h().floor(),
         )?;
         self.draw_hp_bar(ctx)?;
         ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
