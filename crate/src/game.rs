@@ -21,12 +21,11 @@ pub struct Game {
     tower_size: f64,
     ui_text_size: f64,
 
-    map_canvas: HtmlCanvasElement,
-    map_ctx: CanvasRenderingContext2d,
-    fg_ctx: CanvasRenderingContext2d,
     width: u32,
     height: u32,
     mouse: Mouse,
+    bg_canvas: HtmlCanvasElement,
+    fg_ctx: CanvasRenderingContext2d,
 
     sprites: HashMap<String, HtmlImageElement>,
     planes: Vec<PaperPlane>,
@@ -47,17 +46,64 @@ impl Game {
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
-        let window_width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
-        let window_height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
+        document
+            .body()
+            .unwrap()
+            .style()
+            .set_property("margin", "0")
+            .unwrap();
+        let width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
+        let height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
+        let tower_size = height as f64 * 0.08;
+
+        let bg_canvas = document
+            .create_element("canvas")
+            .unwrap()
+            .dyn_into::<HtmlCanvasElement>()
+            .unwrap();
+        bg_canvas.set_width(width);
+        bg_canvas.set_height((tower_size * 1.2).floor() as u32);
+        bg_canvas.style().set_property("z-index", "1").unwrap();
+        bg_canvas.style().set_property("display", "block").unwrap();
+        bg_canvas
+            .style()
+            .set_property("position", "absolute")
+            .unwrap();
+        document.body().unwrap().append_child(&bg_canvas).unwrap();
+        let bg_ctx = bg_canvas
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()
+            .unwrap();
+        bg_ctx.begin_path();
+        bg_ctx.set_fill_style(&JsValue::from_str("#555555"));
+        bg_ctx.rect(
+            0.0,
+            0.0,
+            bg_canvas.width() as f64,
+            bg_canvas.height() as f64,
+        );
+        bg_ctx.fill();
+        bg_ctx.close_path();
 
         let fg_canvas = document
             .create_element("canvas")
             .unwrap()
             .dyn_into::<HtmlCanvasElement>()
             .unwrap();
-        fg_canvas.set_width(window_width);
-        fg_canvas.set_height(window_height);
+        fg_canvas.set_width(width);
+        fg_canvas.set_height(height);
         fg_canvas.style().set_property("z-index", "2").unwrap();
+        fg_canvas
+            .style()
+            .set_property("background", "#4c7942")
+            .unwrap();
+        fg_canvas.style().set_property("display", "block").unwrap();
+        fg_canvas
+            .style()
+            .set_property("position", "absolute")
+            .unwrap();
         document.body().unwrap().append_child(&fg_canvas).unwrap();
         let fg_ctx = fg_canvas
             .get_context("2d")
@@ -67,11 +113,8 @@ impl Game {
             .unwrap();
         fg_ctx.set_font("36px monospace");
 
-        let width = fg_canvas.width();
-        let height = fg_canvas.height();
-
+        // Populate the sprite map
         let mut sprites = HashMap::new();
-
         let sprite_names: [&str; 22] = [
             "Map",
             "Plane",
@@ -102,38 +145,7 @@ impl Game {
             sprites.insert(String::from(*sprite), img);
         }
 
-        let map_canvas = document
-            .create_element("canvas")
-            .unwrap()
-            .dyn_into::<HtmlCanvasElement>()
-            .unwrap();
-        // map_canvas.set_width(64);
-        // map_canvas.set_height(64);
-        map_canvas.set_width(width);
-        map_canvas.set_height(height);
-        map_canvas
-            .style()
-            .set_property("background", "purple")
-            .unwrap();
-        map_canvas.style().set_property("z-index", "1").unwrap();
-        document.body().unwrap().append_child(&map_canvas).unwrap();
-        let map_ctx = map_canvas
-            .get_context("2d")
-            .expect("get 2d ctx")
-            .unwrap()
-            .dyn_into::<CanvasRenderingContext2d>()
-            .unwrap();
-        map_ctx
-            .draw_image_with_html_image_element_and_dw_and_dh(
-                sprites.get("Plane").unwrap(),
-                0.0,
-                0.0,
-                width as f64,
-                height as f64,
-            )
-            .expect("drawing Map");
-
-        let tower_size = height as f64 * 0.08;
+        // Create Tower Buttons
         let buttons = vec![
             Button::new(
                 Rect::new(
@@ -195,8 +207,7 @@ impl Game {
             ui_text_size: height as f64 * 0.03,
             width,
             height,
-            map_canvas,
-            map_ctx,
+            bg_canvas,
             fg_ctx,
             mouse: Mouse::new(),
             sprites,
@@ -210,6 +221,7 @@ impl Game {
             cash: 100,
         }
     }
+
     fn spawn_basics(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
             self.planes.push(PaperPlane::new_basic(Rect::new(
@@ -220,7 +232,6 @@ impl Game {
             )));
         }
     }
-
     fn spawn_bullets(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
             self.planes.push(PaperPlane::new_bullet(Rect::new(
@@ -231,7 +242,6 @@ impl Game {
             )));
         }
     }
-
     fn spawn_gliders(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
             self.planes.push(PaperPlane::new_glider(Rect::new(
@@ -242,7 +252,6 @@ impl Game {
             )));
         }
     }
-
     fn spawn_blimps(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
             self.planes.push(PaperPlane::new_blimp(Rect::new(
@@ -270,7 +279,7 @@ impl Game {
                 self.spawn_basics(25, 2.0);
                 self.round += 1;
             }
-            3 if elapsed >= 1000 => {
+            3 if elapsed >= 1500 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
                 self.spawn_bullets(25, 2.0);
@@ -338,23 +347,25 @@ impl Game {
     }
 
     /// Render towers and harm planes
-    fn render_towers(&mut self) {
+    fn render_towers(&mut self) -> Result<(), JsValue> {
         for tower in self.towers.iter_mut() {
             tower.events(&self.mouse, &mut self.cash);
-            tower.draw(&self.fg_ctx, &self.sprites).expect("tower draw");
+            tower.draw(&self.fg_ctx, &self.sprites)?;
 
             for plane in self.planes.iter_mut() {
                 tower.damage(plane);
             }
         }
+        Ok(())
     }
 
     /// Render all planes
-    fn render_planes(&mut self) {
+    fn render_planes(&mut self) -> Result<(), JsValue> {
         for plane in self.planes.iter_mut() {
-            plane.draw(&self.fg_ctx, &self.sprites).expect("Plane draw");
+            plane.draw(&self.fg_ctx, &self.sprites)?;
             plane.fly(&self.path);
         }
+        Ok(())
     }
 
     /// Remove planes if they complete the track or get destroyed
@@ -386,34 +397,25 @@ impl Game {
     }
 
     /// Render text found in the top bar
-    fn render_text(&self) {
+    fn render_text(&self) -> Result<(), JsValue> {
         self.fg_ctx.begin_path();
         self.fg_ctx.set_fill_style(&JsValue::from_str("#111111"));
         self.fg_ctx
             .set_font(&format!("{}px sans-serif", self.ui_text_size));
         self.fg_ctx
-            .fill_text(&format!("❤️ : {}", self.hp), 10.0, self.ui_text_size + 5.0)
-            .expect("display hp");
+            .fill_text(&format!("❤️ : {}", self.hp), 10.0, self.ui_text_size + 5.0)?;
         self.fg_ctx
-            .fill_text(&format!("$  : {}", self.cash), 10.0, self.tower_size - 5.0)
-            .expect("display cash");
+            .fill_text(&format!("$  : {}", self.cash), 10.0, self.tower_size - 5.0)?;
         self.fg_ctx.close_path();
+        Ok(())
     }
 
     /// Render the top bar
     fn render_top_bar(&self) -> Result<(), JsValue> {
-        self.fg_ctx.begin_path();
-        self.fg_ctx.set_fill_style(&JsValue::from_str("#555555"));
-        self.fg_ctx
-            .rect(0.0, 0.0, self.width as f64, self.tower_size + 10.0);
-        self.fg_ctx.fill();
-        self.fg_ctx.close_path();
-
         for button in self.buttons.iter() {
             button.draw(&self.fg_ctx, &self.sprites)?;
         }
-
-        self.render_text();
+        self.render_text()?;
         Ok(())
     }
 
@@ -430,33 +432,31 @@ impl Game {
         self.fg_ctx
             .clear_rect(0.0, 0.0, self.width.into(), self.height.into());
 
-        // self.map_ctx
-        //     .draw_image_with_html_image_element_and_dw_and_dh(
-        //         self.sprites.get("Plane").unwrap(),
-        //         0.0,
-        //         0.0,
-        //         self.width as f64,
-        //         self.height as f64,
-        //     )
-        //     .expect("drawing Map");
         self.fg_ctx
-            .draw_image_with_html_canvas_element(&self.map_canvas, 10.0, 10.0)
-            .expect("drawing Map");
+            .draw_image_with_html_canvas_element(&self.bg_canvas, 0.0, 0.0)?;
+
+        self.fg_ctx
+            .draw_image_with_html_image_element_and_dw_and_dh(
+                self.sprites.get("Map").unwrap(),
+                0.0,
+                0.0,
+                self.width as f64,
+                self.height as f64,
+            )?;
 
         self.make_planes();
 
         self.events();
 
-        self.render_towers();
-        self.render_planes();
+        self.render_towers()?;
+        self.render_planes()?;
 
         self.remove_towers();
         self.remove_planes();
 
-        self.render_top_bar().expect("render top bar");
+        self.render_top_bar()?;
 
         self.tic += 1;
-
         Ok(())
     }
 }
