@@ -1,4 +1,5 @@
 mod buttontype;
+mod hp;
 mod mouse;
 mod planepath;
 mod rect;
@@ -6,6 +7,7 @@ mod towerstatus;
 mod towertype;
 
 pub use buttontype::ButtonType;
+pub use hp::HitPoints;
 pub use mouse::Mouse;
 pub use planepath::Direction;
 pub use planepath::PlanePath;

@@ -51,6 +51,19 @@ impl PlanePath {
         Self { turns }
     }
 
+    pub fn new_main_path(width: f64, height: f64) -> Self {
+        Self::new(vec![
+            Turn::new((width * 0.22, height * 0.26), Direction::Down),
+            Turn::new((width * 0.22, height * 0.72), Direction::Right),
+            Turn::new((width * 0.43, height * 0.72), Direction::Up),
+            Turn::new((width * 0.43, height * 0.25), Direction::Right),
+            Turn::new((width * 0.62, height * 0.25), Direction::Down),
+            Turn::new((width * 0.62, height * 0.72), Direction::Right),
+            Turn::new((width * 0.85, height * 0.72), Direction::Up),
+            Turn::new((width * 0.85, height * 0.26), Direction::Right),
+        ])
+    }
+
     /// Returns a reference to the Turns
     pub fn turns(&self) -> &[Turn] {
         &self.turns

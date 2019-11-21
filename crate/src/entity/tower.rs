@@ -38,23 +38,30 @@ pub struct Tower {
 }
 
 impl Tower {
+    fn new_upgrade(rect: &Rect) -> Button {
+        Button::new_upgrade(Rect::new(
+            rect.x().floor(),
+            (rect.y() - rect.h() * 0.6).floor(),
+            rect.w().floor(),
+            (rect.h() * 0.5).floor(),
+        ))
+    }
+    fn new_delete(rect: &Rect) -> Button {
+        Button::new_delete(Rect::new(
+            rect.x().floor(),
+            (rect.y() + rect.h() * 1.3).floor(),
+            rect.w().floor(),
+            (rect.h() * 0.5).floor(),
+        ))
+    }
+
     /// Construct a new Water Gun
     pub fn new_water_gun(rect: Rect) -> Self {
         Self {
             variant: TowerType::WaterGun(WaterGun::Basic),
-            upgrade_button: Button::new_upgrade(Rect::new(
-                rect.x(),
-                rect.y() - rect.h() * 0.6,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
-            delete_button: Button::new_delete(Rect::new(
-                rect.x(),
-                rect.y() + rect.h() * 1.3,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
-            range: rect.h() * 2.5,
+            upgrade_button: Tower::new_upgrade(&rect),
+            delete_button: Tower::new_delete(&rect),
+            range: (rect.h() * 2.5).floor(),
             rect,
             rotation: 0.0,
             base_img: String::from("WaterGunBase"),
@@ -73,18 +80,8 @@ impl Tower {
     pub fn new_acid_tower(rect: Rect) -> Self {
         Self {
             variant: TowerType::AcidTower(AcidTower::Basic),
-            upgrade_button: Button::new_upgrade(Rect::new(
-                rect.x(),
-                rect.y() - rect.h() * 0.6,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
-            delete_button: Button::new_delete(Rect::new(
-                rect.x(),
-                rect.y() + rect.h() * 1.3,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
+            upgrade_button: Tower::new_upgrade(&rect),
+            delete_button: Tower::new_delete(&rect),
             range: rect.h() * 1.5,
             rect,
             rotation: 0.0,
@@ -104,18 +101,8 @@ impl Tower {
     pub fn new_soda_maker(rect: Rect) -> Self {
         Self {
             variant: TowerType::SodaMaker(SodaMaker::Basic),
-            upgrade_button: Button::new_upgrade(Rect::new(
-                rect.x(),
-                rect.y() - rect.h() * 0.6,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
-            delete_button: Button::new_delete(Rect::new(
-                rect.x(),
-                rect.y() + rect.h() * 1.3,
-                rect.w(),
-                rect.h() * 0.5,
-            )),
+            upgrade_button: Tower::new_upgrade(&rect),
+            delete_button: Tower::new_delete(&rect),
             range: rect.h() * 3.0,
             rect,
             rotation: 0.0,
@@ -160,7 +147,7 @@ impl Tower {
                 self.rotation = (dx / dist).acos() + PI * 1.5;
             }
 
-            plane.take_damage(self.dmg);
+            plane.hp_mut().take_damage(self.dmg);
         }
     }
 
@@ -224,16 +211,16 @@ impl Tower {
                 sprites.get(&self.blast_img).unwrap(),
                 -self.rect.w() * 0.5,
                 -self.rect.h() * 1.4,
-                self.rect.w(),
-                self.rect.h(),
+                self.rect.w().floor(),
+                self.rect.h().floor(),
             )?;
         }
         ctx.draw_image_with_html_image_element_and_dw_and_dh(
             sprites.get(&self.top_img).unwrap(),
-            -self.rect.w() * 0.5,
-            -self.rect.h() * 0.5,
-            self.rect.w(),
-            self.rect.h(),
+            (-self.rect.w() * 0.5).floor(),
+            (-self.rect.h() * 0.5).floor(),
+            self.rect.w().floor(),
+            self.rect.h().floor(),
         )?;
         ctx.set_transform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)?;
 
@@ -320,7 +307,7 @@ impl Tower {
             self.variant = TowerType::AcidTower(AcidTower::Radioactive);
             self.range *= 1.1;
             self.dmg *= 2;
-            self.dmg_interval *= 0.5;
+            self.dmg_interval *= 0.3;
             *cash -= self.upgrade_cost;
             self.upgrade_cost += 10;
         }

@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{ButtonType, Direction, Mouse, PlanePath, Rect, TowerStatus, Turn},
+    types::{ButtonType, Mouse, PlanePath, Rect, TowerStatus},
     utils::set_panic_hook,
 };
 
@@ -53,7 +53,10 @@ impl Game {
             .set_property("margin", "0")
             .unwrap();
         let width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
+        let width = if width >= 1366 { 1366 } else { width };
         let height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
+        let height = if width >= 768 { 768 } else { height };
+
         let tower_size = height as f64 * 0.08;
 
         let bg_canvas = document
@@ -115,11 +118,14 @@ impl Game {
 
         // Populate the sprite map
         let mut sprites = HashMap::new();
-        let sprite_names: [&str; 22] = [
+        let sprite_names: [&str; 25] = [
             "Map",
             "Plane",
             "Bullet",
+            "BulletRedux",
             "Glider",
+            "GliderRedux",
+            "WaterBomb",
             "Blimp",
             "WaterGunBase",
             "WaterGunTop",
@@ -180,28 +186,7 @@ impl Game {
         ];
 
         Self {
-            path: PlanePath::new(vec![
-                Turn::new((width as f64 * 0.22, height as f64 * 0.26), Direction::Down),
-                Turn::new(
-                    (width as f64 * 0.22, height as f64 * 0.72),
-                    Direction::Right,
-                ),
-                Turn::new((width as f64 * 0.43, height as f64 * 0.72), Direction::Up),
-                Turn::new(
-                    (width as f64 * 0.43, height as f64 * 0.25),
-                    Direction::Right,
-                ),
-                Turn::new((width as f64 * 0.62, height as f64 * 0.25), Direction::Down),
-                Turn::new(
-                    (width as f64 * 0.62, height as f64 * 0.72),
-                    Direction::Right,
-                ),
-                Turn::new((width as f64 * 0.85, height as f64 * 0.72), Direction::Up),
-                Turn::new(
-                    (width as f64 * 0.85, height as f64 * 0.26),
-                    Direction::Right,
-                ),
-            ]),
+            path: PlanePath::new_main_path(width as f64, height as f64),
             plane_size: height as f64 * 0.05,
             tower_size,
             ui_text_size: height as f64 * 0.03,
@@ -222,44 +207,54 @@ impl Game {
         }
     }
 
+    fn plane_start(&self, x: i32, spacing: f64) -> Rect {
+        Rect::new(
+            self.plane_size * -x as f64 * spacing,
+            self.height as f64 * 0.26,
+            self.plane_size,
+            self.plane_size,
+        )
+    }
     fn spawn_basics(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
-            self.planes.push(PaperPlane::new_basic(Rect::new(
-                self.plane_size * -x as f64 * spacing,
-                self.height as f64 * 0.26,
-                self.plane_size,
-                self.plane_size,
-            )));
+            self.planes
+                .push(PaperPlane::new_basic(self.plane_start(x, spacing)));
         }
     }
     fn spawn_bullets(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
-            self.planes.push(PaperPlane::new_bullet(Rect::new(
-                self.plane_size * -x as f64 * spacing,
-                self.height as f64 * 0.26,
-                self.plane_size,
-                self.plane_size,
-            )));
+            self.planes
+                .push(PaperPlane::new_bullet(self.plane_start(x, spacing)));
+        }
+    }
+    fn spawn_bullet_reduxes(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes
+                .push(PaperPlane::new_bullet_redux(self.plane_start(x, spacing)));
         }
     }
     fn spawn_gliders(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
-            self.planes.push(PaperPlane::new_glider(Rect::new(
-                self.plane_size * -x as f64 * spacing,
-                self.height as f64 * 0.26,
-                self.plane_size,
-                self.plane_size,
-            )));
+            self.planes
+                .push(PaperPlane::new_glider(self.plane_start(x, spacing)));
+        }
+    }
+    fn spawn_glider_reduxes(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes
+                .push(PaperPlane::new_glider_redux(self.plane_start(x, spacing)));
+        }
+    }
+    fn spawn_waterbombs(&mut self, n: i32, spacing: f64) {
+        for x in 1..=n {
+            self.planes
+                .push(PaperPlane::new_waterbomb(self.plane_start(x, spacing)));
         }
     }
     fn spawn_blimps(&mut self, n: i32, spacing: f64) {
         for x in 1..=n {
-            self.planes.push(PaperPlane::new_blimp(Rect::new(
-                self.plane_size * -x as f64 * spacing,
-                self.height as f64 * 0.26,
-                self.plane_size,
-                self.plane_size,
-            )));
+            self.planes
+                .push(PaperPlane::new_blimp(self.plane_start(x, spacing)));
         }
     }
 
@@ -289,7 +284,10 @@ impl Game {
             4 if elapsed >= 1000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
+                self.spawn_bullet_reduxes(25, 2.0);
+                self.spawn_glider_reduxes(25, 2.0);
                 self.spawn_blimps(25, 2.0);
+                self.spawn_waterbombs(25, 2.0);
                 self.round += 1;
             }
             _ => (),
@@ -384,7 +382,7 @@ impl Game {
     fn remove_planes(&mut self) {
         let mut i = 0;
         while i != self.planes.len() {
-            if self.planes[i].hp() == 0 {
+            if self.planes[i].hp().is_dead() {
                 self.cash += self.planes[i].bounty() as i32;
                 self.planes.remove(i);
             } else if self.planes[i].x() >= self.width.into() {

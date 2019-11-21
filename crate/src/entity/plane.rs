@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::types::{Direction, PlanePath, Rect};
+use crate::types::{Direction, HitPoints, PlanePath, Rect};
 
 /// An entity spawned by the game to get to the end a map and reduce the player's HP
 #[wasm_bindgen]
@@ -15,8 +15,7 @@ pub struct PaperPlane {
     dx: f64,
     dy: f64,
     img: String,
-    hp: u32,
-    max_hp: u32,
+    hp: HitPoints,
     damage: u32,
     bounty: u32,
 }
@@ -31,8 +30,7 @@ impl PaperPlane {
             dx: 2.0,
             dy: 0.0,
             img: String::from("Plane"),
-            hp: 40,
-            max_hp: 40,
+            hp: HitPoints::new(40),
             damage: 1,
             bounty: 5,
         }
@@ -47,8 +45,21 @@ impl PaperPlane {
             dx: 3.0,
             dy: 0.0,
             img: String::from("Bullet"),
-            hp: 25,
-            max_hp: 25,
+            hp: HitPoints::new(25),
+            damage: 2,
+            bounty: 5,
+        }
+    }
+    /// Constructs a new Bullet Redux
+    pub fn new_bullet_redux(rect: Rect) -> Self {
+        Self {
+            rect,
+            rotation: 0.0,
+            speed: 3.0,
+            dx: 4.0,
+            dy: 0.0,
+            img: String::from("BulletRedux"),
+            hp: HitPoints::new(30),
             damage: 2,
             bounty: 5,
         }
@@ -63,9 +74,37 @@ impl PaperPlane {
             dx: 1.7,
             dy: 0.0,
             img: String::from("Glider"),
-            hp: 50,
-            max_hp: 50,
+            hp: HitPoints::new(50),
             damage: 2,
+            bounty: 10,
+        }
+    }
+    /// Constructs a new Glider Redux
+    pub fn new_glider_redux(rect: Rect) -> Self {
+        Self {
+            rect,
+            rotation: 0.0,
+            speed: 1.7,
+            dx: 1.7,
+            dy: 0.0,
+            img: String::from("GliderRedux"),
+            hp: HitPoints::new(60),
+            damage: 2,
+            bounty: 10,
+        }
+    }
+
+    /// Constructs a new Water Bomb
+    pub fn new_waterbomb(rect: Rect) -> Self {
+        Self {
+            rect,
+            rotation: 0.0,
+            speed: 1.0,
+            dx: 1.0,
+            dy: 0.0,
+            img: String::from("WaterBomb"),
+            hp: HitPoints::new(100),
+            damage: 3,
             bounty: 10,
         }
     }
@@ -79,9 +118,8 @@ impl PaperPlane {
             dx: 1.0,
             dy: 0.0,
             img: String::from("Blimp"),
-            hp: 200,
-            max_hp: 200,
-            damage: 3,
+            hp: HitPoints::new(200),
+            damage: 5,
             bounty: 10,
         }
     }
@@ -111,15 +149,6 @@ impl PaperPlane {
         self.rect.center_y()
     }
 
-    /// Return current HP of the Plane
-    pub fn hp(&self) -> u32 {
-        self.hp
-    }
-    /// Return the current HP of the Plane as a percentage
-    pub fn hp_percent(&self) -> f64 {
-        self.hp as f64 / self.max_hp as f64
-    }
-
     /// Returns the amount of damage the Plane does upon course completion
     pub fn damage(&self) -> u32 {
         self.damage
@@ -129,13 +158,13 @@ impl PaperPlane {
         self.bounty
     }
 
-    /// Reduce the HP of the Plane by a damage value
-    pub fn take_damage(&mut self, dmg: u32) {
-        self.hp = if let Some(hp) = self.hp.checked_sub(dmg) {
-            hp
-        } else {
-            0
-        };
+    /// Returns a reference to the Plane's HP
+    pub fn hp(&self) -> &HitPoints {
+        &self.hp
+    }
+    /// Returns a mutable reference to the Plane's HP
+    pub fn hp_mut(&mut self) -> &mut HitPoints {
+        &mut self.hp
     }
 
     /// Advance the location of the Plane by one increment
@@ -177,8 +206,8 @@ impl PaperPlane {
         ctx.fill_rect(
             (-self.rect.w() * 0.5).floor(),
             (-self.rect.h() * 0.5).floor(),
-            (self.rect.w() * self.hp_percent()).floor(),
-            3.0,
+            (self.rect.w() * self.hp().percent()).floor(),
+            (self.rect.h() * 0.1).floor(),
         );
         ctx.close_path();
 
