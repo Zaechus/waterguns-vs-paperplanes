@@ -46,25 +46,25 @@ impl Game {
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
-        let styles: [(&str, &str); 3] = [
-            ("margin", "0"),
-            ("display", "flex"),
-            ("justify-content", "center"),
-        ];
-        for s in styles.iter() {
-            document
-                .body()
-                .unwrap()
-                .style()
-                .set_property(s.0, s.1)
-                .unwrap();
-        }
+        document
+            .body()
+            .unwrap()
+            .style()
+            .set_property("margin", "0")
+            .unwrap();
         let width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
         let width = if width >= 1366 { 1366 } else { width };
         let height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
         let height = if width >= 768 { 768 } else { height };
 
         let tower_size = height as f64 * 0.08;
+
+        let mut styles = [
+            ("z-index", "1"),
+            ("background", "#555555"),
+            ("display", "block"),
+            ("position", "absolute"),
+        ];
 
         let bg_canvas = document
             .create_element("canvas")
@@ -73,11 +73,6 @@ impl Game {
             .unwrap();
         bg_canvas.set_width(width);
         bg_canvas.set_height((tower_size * 1.2).floor() as u32);
-        let styles: [(&str, &str); 3] = [
-            ("z-index", "1"),
-            ("background", "#555555"),
-            ("position", "absolute"),
-        ];
         for s in styles.iter() {
             bg_canvas.style().set_property(s.0, s.1).unwrap();
         }
@@ -106,11 +101,8 @@ impl Game {
             .unwrap();
         fg_canvas.set_width(width);
         fg_canvas.set_height(height);
-        let styles: [(&str, &str); 3] = [
-            ("z-index", "2"),
-            ("background", "#4c7942"),
-            ("position", "absolute"),
-        ];
+        styles[0] = ("z-index", "2");
+        styles[1] = ("background", "#4c7942");
         for s in styles.iter() {
             fg_canvas.style().set_property(s.0, s.1).unwrap();
         }
@@ -125,7 +117,7 @@ impl Game {
 
         // Populate the sprite map
         let mut sprites = HashMap::new();
-        let sprite_names: [&str; 25] = [
+        let sprite_names = [
             "Map",
             "Plane",
             "Bullet",
@@ -210,7 +202,7 @@ impl Game {
             round_start_tic: 0,
             tic: 1,
             hp: HitPoints::new(100),
-            cash: 100,
+            cash: 20,
         }
     }
 

@@ -32,7 +32,7 @@ impl PaperPlane {
             img: String::from("Plane"),
             hp: HitPoints::new(40),
             damage: 1,
-            bounty: 5,
+            bounty: 1,
         }
     }
 
@@ -47,7 +47,7 @@ impl PaperPlane {
             img: String::from("Bullet"),
             hp: HitPoints::new(25),
             damage: 2,
-            bounty: 5,
+            bounty: 2,
         }
     }
     /// Constructs a new Bullet Redux
@@ -76,7 +76,7 @@ impl PaperPlane {
             img: String::from("Glider"),
             hp: HitPoints::new(50),
             damage: 2,
-            bounty: 10,
+            bounty: 3,
         }
     }
     /// Constructs a new Glider Redux
@@ -90,7 +90,7 @@ impl PaperPlane {
             img: String::from("GliderRedux"),
             hp: HitPoints::new(60),
             damage: 2,
-            bounty: 10,
+            bounty: 5,
         }
     }
 
