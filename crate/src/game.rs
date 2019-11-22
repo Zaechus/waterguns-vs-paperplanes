@@ -6,7 +6,7 @@ use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElem
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
-    types::{ButtonType, Mouse, PlanePath, Rect, TowerStatus},
+    types::{ButtonType, HitPoints, Mouse, PlanePath, Rect, TowerStatus},
     utils::set_panic_hook,
 };
 
@@ -36,7 +36,7 @@ pub struct Game {
     round: u32,
     round_start_tic: u32,
     tic: u32,
-    hp: i32,
+    hp: HitPoints,
     cash: i32,
 }
 
@@ -46,12 +46,19 @@ impl Game {
     pub fn new() -> Self {
         set_panic_hook();
         let document = window().unwrap().document().unwrap();
-        document
-            .body()
-            .unwrap()
-            .style()
-            .set_property("margin", "0")
-            .unwrap();
+        let styles: [(&str, &str); 3] = [
+            ("margin", "0"),
+            ("display", "flex"),
+            ("justify-content", "center"),
+        ];
+        for s in styles.iter() {
+            document
+                .body()
+                .unwrap()
+                .style()
+                .set_property(s.0, s.1)
+                .unwrap();
+        }
         let width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
         let width = if width >= 1366 { 1366 } else { width };
         let height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
@@ -66,12 +73,14 @@ impl Game {
             .unwrap();
         bg_canvas.set_width(width);
         bg_canvas.set_height((tower_size * 1.2).floor() as u32);
-        bg_canvas.style().set_property("z-index", "1").unwrap();
-        bg_canvas.style().set_property("display", "block").unwrap();
-        bg_canvas
-            .style()
-            .set_property("position", "absolute")
-            .unwrap();
+        let styles: [(&str, &str); 3] = [
+            ("z-index", "1"),
+            ("background", "#555555"),
+            ("position", "absolute"),
+        ];
+        for s in styles.iter() {
+            bg_canvas.style().set_property(s.0, s.1).unwrap();
+        }
         document.body().unwrap().append_child(&bg_canvas).unwrap();
         let bg_ctx = bg_canvas
             .get_context("2d")
@@ -97,16 +106,14 @@ impl Game {
             .unwrap();
         fg_canvas.set_width(width);
         fg_canvas.set_height(height);
-        fg_canvas.style().set_property("z-index", "2").unwrap();
-        fg_canvas
-            .style()
-            .set_property("background", "#4c7942")
-            .unwrap();
-        fg_canvas.style().set_property("display", "block").unwrap();
-        fg_canvas
-            .style()
-            .set_property("position", "absolute")
-            .unwrap();
+        let styles: [(&str, &str); 3] = [
+            ("z-index", "2"),
+            ("background", "#4c7942"),
+            ("position", "absolute"),
+        ];
+        for s in styles.iter() {
+            fg_canvas.style().set_property(s.0, s.1).unwrap();
+        }
         document.body().unwrap().append_child(&fg_canvas).unwrap();
         let fg_ctx = fg_canvas
             .get_context("2d")
@@ -202,7 +209,7 @@ impl Game {
             round: 1,
             round_start_tic: 0,
             tic: 1,
-            hp: 100,
+            hp: HitPoints::new(100),
             cash: 100,
         }
     }
@@ -386,7 +393,7 @@ impl Game {
                 self.cash += self.planes[i].bounty() as i32;
                 self.planes.remove(i);
             } else if self.planes[i].x() >= self.width.into() {
-                self.hp -= self.planes[i].damage() as i32;
+                self.hp.take_damage(self.planes[i].damage());
                 self.planes.remove(i);
             } else {
                 i += 1;
@@ -400,8 +407,11 @@ impl Game {
         self.fg_ctx.set_fill_style(&JsValue::from_str("#111111"));
         self.fg_ctx
             .set_font(&format!("{}px sans-serif", self.ui_text_size));
-        self.fg_ctx
-            .fill_text(&format!("❤️ : {}", self.hp), 10.0, self.ui_text_size + 5.0)?;
+        self.fg_ctx.fill_text(
+            &format!("❤️ : {}", self.hp.curr_hp()),
+            10.0,
+            self.ui_text_size + 5.0,
+        )?;
         self.fg_ctx
             .fill_text(&format!("$  : {}", self.cash), 10.0, self.tower_size - 5.0)?;
         self.fg_ctx.close_path();
@@ -415,6 +425,11 @@ impl Game {
         }
         self.render_text()?;
         Ok(())
+    }
+
+    #[wasm_bindgen(js_name = isDefeated)]
+    pub fn is_defeated(&self) -> bool {
+        self.hp.is_dead()
     }
 
     /// Render an increment of the Game

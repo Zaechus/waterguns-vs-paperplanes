@@ -13,6 +13,11 @@ import { Game } from "waterguns-vs-paperplanes";
     function gameLoop() {
         game.draw(mouseX, mouseY, mouseDown, mouseUp);
 
+        if (game.isDefeated()) {
+            alert("YOU WERE DEFEATED");
+            window.location.reload(true);
+        }
+
         window.requestAnimationFrame(gameLoop);
         mouseUp = false;
     }
