@@ -68,7 +68,7 @@ impl Tower {
             blast_img: String::from("WaterGunBlast"),
             top_img: String::from("WaterGunTop"),
             upgrade_cost: 10,
-            dmg: 10,
+            dmg: 5,
             dmg_interval: 700.0,
             last_dmg_time: 0.0,
             status: TowerStatus::Normal,

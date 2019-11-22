@@ -28,6 +28,8 @@ features = [
   "console",
   "CssStyleDeclaration",
   "Document",
+  "DomRect",
+  "DomRectReadOnly",
   "Element",
   "HtmlElement",
   "HtmlCanvasElement",

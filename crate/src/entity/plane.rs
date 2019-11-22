@@ -26,11 +26,11 @@ impl PaperPlane {
         Self {
             rect,
             rotation: 0.0,
-            speed: 2.0,
-            dx: 2.0,
+            speed: 1.3,
+            dx: 1.3,
             dy: 0.0,
             img: String::from("Plane"),
-            hp: HitPoints::new(40),
+            hp: HitPoints::new(10),
             damage: 1,
             bounty: 1,
         }
@@ -45,7 +45,7 @@ impl PaperPlane {
             dx: 3.0,
             dy: 0.0,
             img: String::from("Bullet"),
-            hp: HitPoints::new(25),
+            hp: HitPoints::new(15),
             damage: 2,
             bounty: 2,
         }
@@ -55,7 +55,7 @@ impl PaperPlane {
         Self {
             rect,
             rotation: 0.0,
-            speed: 3.0,
+            speed: 4.0,
             dx: 4.0,
             dy: 0.0,
             img: String::from("BulletRedux"),

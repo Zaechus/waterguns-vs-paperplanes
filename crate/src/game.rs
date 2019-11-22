@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
-use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
+use web_sys::{console, window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
@@ -10,7 +10,7 @@ use crate::{
     utils::set_panic_hook,
 };
 
-const WATERGUN_COST: i32 = 20;
+const WATERGUN_COST: i32 = 10;
 const ACID_COST: i32 = 30;
 const SODA_COST: i32 = 50;
 
@@ -21,10 +21,11 @@ pub struct Game {
     tower_size: f64,
     ui_text_size: f64,
 
-    width: u32,
-    height: u32,
+    width: f64,
+    height: f64,
     mouse: Mouse,
     bg_canvas: HtmlCanvasElement,
+    fg_canvas: HtmlCanvasElement,
     fg_ctx: CanvasRenderingContext2d,
 
     sprites: HashMap<String, HtmlImageElement>,
@@ -52,30 +53,34 @@ impl Game {
             .style()
             .set_property("margin", "0")
             .unwrap();
-        let width = window().unwrap().inner_width().unwrap().as_f64().unwrap() as u32;
-        let width = if width >= 1366 { 1366 } else { width };
-        let height = window().unwrap().inner_height().unwrap().as_f64().unwrap() as u32;
-        let height = if width >= 768 { 768 } else { height };
+        let width = window().unwrap().inner_width().unwrap().as_f64().unwrap();
+        let width = if width >= 1366.0 { 1366.0 } else { width };
+        let height = window().unwrap().inner_height().unwrap().as_f64().unwrap();
+        let height = if width >= 768.0 { 768.0 } else { height };
 
         let tower_size = height as f64 * 0.08;
 
-        let mut styles = [
-            ("z-index", "1"),
-            ("background", "#555555"),
-            ("display", "block"),
-            ("position", "absolute"),
-        ];
+        let canvas_css = "
+            padding: 0;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        ";
 
         let bg_canvas = document
             .create_element("canvas")
             .unwrap()
             .dyn_into::<HtmlCanvasElement>()
             .unwrap();
-        bg_canvas.set_width(width);
+        bg_canvas.set_width(width.floor() as u32);
         bg_canvas.set_height((tower_size * 1.2).floor() as u32);
-        for s in styles.iter() {
-            bg_canvas.style().set_property(s.0, s.1).unwrap();
-        }
+        bg_canvas
+            .style()
+            .set_css_text(&format!("z-index: 1;\n{}", canvas_css));
         document.body().unwrap().append_child(&bg_canvas).unwrap();
         let bg_ctx = bg_canvas
             .get_context("2d")
@@ -99,13 +104,14 @@ impl Game {
             .unwrap()
             .dyn_into::<HtmlCanvasElement>()
             .unwrap();
-        fg_canvas.set_width(width);
-        fg_canvas.set_height(height);
-        styles[0] = ("z-index", "2");
-        styles[1] = ("background", "#4c7942");
-        for s in styles.iter() {
-            fg_canvas.style().set_property(s.0, s.1).unwrap();
-        }
+        fg_canvas.set_width(width.floor() as u32);
+        fg_canvas.set_height(height.floor() as u32);
+        fg_canvas.style().set_css_text(&format!(
+            "z-index: 2;
+            background: #4c7942;
+            {}",
+            canvas_css
+        ));
         document.body().unwrap().append_child(&fg_canvas).unwrap();
         let fg_ctx = fg_canvas
             .get_context("2d")
@@ -192,6 +198,7 @@ impl Game {
             width,
             height,
             bg_canvas,
+            fg_canvas,
             fg_ctx,
             mouse: Mouse::new(),
             sprites,
@@ -202,14 +209,14 @@ impl Game {
             round_start_tic: 0,
             tic: 1,
             hp: HitPoints::new(100),
-            cash: 20,
+            cash: WATERGUN_COST,
         }
     }
 
     fn plane_start(&self, x: i32, spacing: f64) -> Rect {
         Rect::new(
             self.plane_size * -x as f64 * spacing,
-            self.height as f64 * 0.26,
+            self.height * 0.26,
             self.plane_size,
             self.plane_size,
         )
@@ -264,28 +271,28 @@ impl Game {
             1 if elapsed >= 100 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
-                self.spawn_bullets(25, 2.0);
+                self.spawn_basics(25, 3.0);
                 self.round += 1;
             }
-            2 if elapsed >= 1000 => {
+            2 if elapsed >= 2000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
-                self.spawn_basics(25, 2.0);
+                self.spawn_bullets(25, 3.0);
                 self.round += 1;
             }
-            3 if elapsed >= 1500 => {
+            3 if elapsed >= 3000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
                 self.spawn_bullets(25, 2.0);
                 self.spawn_gliders(25, 2.0);
                 self.round += 1;
             }
-            4 if elapsed >= 1000 => {
+            4 if elapsed >= 3000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
-                self.spawn_bullet_reduxes(25, 2.0);
+                self.spawn_bullet_reduxes(25, 3.0);
                 self.spawn_glider_reduxes(25, 2.0);
-                self.spawn_blimps(25, 2.0);
+                self.spawn_blimps(25, 3.0);
                 self.spawn_waterbombs(25, 2.0);
                 self.round += 1;
             }
@@ -432,7 +439,20 @@ impl Game {
         mouse_down: bool,
         mouse_up: bool,
     ) -> Result<(), JsValue> {
-        self.mouse.update(mouse_x, mouse_y, mouse_down, mouse_up);
+        let canvas_rect = self.fg_canvas.get_bounding_client_rect();
+        self.mouse.update(
+            mouse_x - canvas_rect.left(),
+            mouse_y - canvas_rect.top(),
+            mouse_down,
+            mouse_up,
+        );
+        console::log_1(&JsValue::from_str(&format!(
+            "{} {}\n{} {}",
+            mouse_x,
+            mouse_y,
+            mouse_x - canvas_rect.left(),
+            mouse_y - canvas_rect.top()
+        )));
 
         self.fg_ctx
             .clear_rect(0.0, 0.0, self.width.into(), self.height.into());
