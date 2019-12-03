@@ -1,7 +1,7 @@
 import { Game } from "waterguns-vs-paperplanes";
 
 (() => {
-    var noContext = document.getElementsByTagName("canvas");
+    // var noContext = document.getElementsByTagName("canvas");
     var mouseX = 0;
     var mouseY = 0;
     var mouseDown = false;
@@ -37,8 +37,7 @@ import { Game } from "waterguns-vs-paperplanes";
     });
 
     // prevent the context menu from popping up on a right click
-    noContext[0].addEventListener('contextmenu', (e: MouseEvent) => {
-        mouseDown = true;
+    document.addEventListener('contextmenu', (e: MouseEvent) => {
         e.preventDefault();
     });
 
