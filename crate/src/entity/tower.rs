@@ -38,7 +38,7 @@ pub struct Tower {
 }
 
 impl Tower {
-    fn new_upgrade(rect: &Rect) -> Button {
+    fn new_upgrade_button(rect: &Rect) -> Button {
         Button::new_upgrade(Rect::new(
             rect.x().floor(),
             (rect.y() - rect.h() * 0.6).floor(),
@@ -46,7 +46,7 @@ impl Tower {
             (rect.h() * 0.5).floor(),
         ))
     }
-    fn new_delete(rect: &Rect) -> Button {
+    fn new_delete_button(rect: &Rect) -> Button {
         Button::new_delete(Rect::new(
             rect.x().floor(),
             (rect.y() + rect.h() * 1.3).floor(),
@@ -59,8 +59,8 @@ impl Tower {
     pub fn new_water_gun(rect: Rect) -> Self {
         Self {
             variant: TowerType::WaterGun(WaterGun::Basic),
-            upgrade_button: Tower::new_upgrade(&rect),
-            delete_button: Tower::new_delete(&rect),
+            upgrade_button: Tower::new_upgrade_button(&rect),
+            delete_button: Tower::new_delete_button(&rect),
             range: (rect.h() * 2.5).floor(),
             rect,
             rotation: 0.0,
@@ -69,7 +69,7 @@ impl Tower {
             top_img: String::from("WaterGunTop"),
             upgrade_cost: 10,
             dmg: 5,
-            dmg_interval: 700.0,
+            dmg_interval: 800.0,
             last_dmg_time: 0.0,
             status: TowerStatus::Normal,
             mouse_over: false,
@@ -80,8 +80,8 @@ impl Tower {
     pub fn new_acid_tower(rect: Rect) -> Self {
         Self {
             variant: TowerType::AcidTower(AcidTower::Basic),
-            upgrade_button: Tower::new_upgrade(&rect),
-            delete_button: Tower::new_delete(&rect),
+            upgrade_button: Tower::new_upgrade_button(&rect),
+            delete_button: Tower::new_delete_button(&rect),
             range: rect.h() * 1.5,
             rect,
             rotation: 0.0,
@@ -101,8 +101,8 @@ impl Tower {
     pub fn new_soda_maker(rect: Rect) -> Self {
         Self {
             variant: TowerType::SodaMaker(SodaMaker::Basic),
-            upgrade_button: Tower::new_upgrade(&rect),
-            delete_button: Tower::new_delete(&rect),
+            upgrade_button: Tower::new_upgrade_button(&rect),
+            delete_button: Tower::new_delete_button(&rect),
             range: rect.h() * 3.0,
             rect,
             rotation: 0.0,
@@ -294,9 +294,8 @@ impl Tower {
             self.variant = TowerType::WaterGun(WaterGun::ExtremeSoaker);
             self.range *= 1.2;
             self.dmg += 5;
-            self.dmg_interval *= 0.66;
+            self.dmg_interval *= 0.7;
             *cash -= self.upgrade_cost;
-            self.upgrade_cost += 10;
         }
     }
     /// Upgrade the tower to a Radioactive Tower
