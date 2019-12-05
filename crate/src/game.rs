@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
-use web_sys::{console, window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
+use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
     entity::{Button, PaperPlane, Tower},
@@ -46,6 +46,47 @@ impl Game {
     /// Setup a new game
     pub fn new() -> Self {
         set_panic_hook();
+        let document = window().unwrap().document().unwrap();
+
+        let fg_canvas = document
+            .create_element("canvas")
+            .unwrap()
+            .dyn_into::<HtmlCanvasElement>()
+            .unwrap();
+
+        Self {
+            path: PlanePath::new_main_path(0.0, 0.0),
+            plane_size: 0.0,
+            tower_size: 0.0,
+            ui_text_size: 0.0,
+            width: 0.0,
+            height: 0.0,
+            bg_canvas: document
+                .create_element("canvas")
+                .unwrap()
+                .dyn_into::<HtmlCanvasElement>()
+                .unwrap(),
+            fg_ctx: fg_canvas
+                .get_context("2d")
+                .unwrap()
+                .unwrap()
+                .dyn_into::<CanvasRenderingContext2d>()
+                .unwrap(),
+            fg_canvas,
+            mouse: Mouse::new(),
+            sprites: HashMap::new(),
+            planes: Vec::new(),
+            towers: Vec::new(),
+            buttons: Vec::new(),
+            round: 1,
+            round_start_tic: 0,
+            tic: 1,
+            hp: HitPoints::new(100),
+            cash: WATERGUN_COST,
+        }
+    }
+
+    pub fn init_new() -> Self {
         let document = window().unwrap().document().unwrap();
         document
             .body()
@@ -271,6 +312,7 @@ impl Game {
             1 if elapsed >= 100 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
+                self.spawn_bullets(100, 0.5);
                 self.spawn_basics(20, 3.0);
                 self.round += 1;
             }
@@ -446,13 +488,6 @@ impl Game {
             mouse_down,
             mouse_up,
         );
-        console::log_1(&JsValue::from_str(&format!(
-            "{} {}\n{} {}",
-            mouse_x,
-            mouse_y,
-            mouse_x - canvas_rect.left(),
-            mouse_y - canvas_rect.top()
-        )));
 
         self.fg_ctx
             .clear_rect(0.0, 0.0, self.width.into(), self.height.into());
