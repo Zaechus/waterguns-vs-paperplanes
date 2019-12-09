@@ -12,6 +12,11 @@ fn index() -> Option<NamedFile> {
     NamedFile::open(Path::new("public/index.html")).ok()
 }
 
+#[get("/game.html")]
+fn game() -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/game.html")).ok()
+}
+
 #[catch(404)]
 fn not_found() -> Option<NamedFile> {
     NamedFile::open(Path::new("public/404.html")).ok()
@@ -35,6 +40,6 @@ fn favicon() -> Option<NamedFile> {
 fn main() {
     rocket::ignite()
         .register(catchers![not_found])
-        .mount("/", routes![index, files, static_files, favicon])
+        .mount("/", routes![index, game, files, static_files, favicon])
         .launch();
 }
