@@ -277,17 +277,11 @@ impl Game {
             2 if elapsed >= 2000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
-                self.spawn_basics(25, 2.5);
-                self.round += 1;
-            }
-            3 if elapsed >= 3000 => {
-                self.round_start_tic = 0;
-                self.tic = 0;
                 self.spawn_bullets(25, 2.0);
                 self.spawn_gliders(25, 2.0);
                 self.round += 1;
             }
-            4 if elapsed >= 3000 => {
+            3 if elapsed >= 2000 => {
                 self.round_start_tic = 0;
                 self.tic = 0;
                 self.spawn_bullet_reduxes(25, 3.0);
