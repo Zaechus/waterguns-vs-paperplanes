@@ -16,7 +16,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* WEBPACK VAR INJECTION */(f
 /*!*********************************************************!*\
   !*** ./crate/pkg/waterguns_vs_paperplanes_wasm_bg.wasm ***!
   \*********************************************************/
-/*! exports provided: memory, __wbg_game_free, game_new, game_isDefeated, game_draw, __wbg_mouse_free, init, __wbg_tower_free, __wbg_button_free, __wbg_paperplane_free, __wbg_rect_free, __wbindgen_exn_store, __wbindgen_malloc, __wbindgen_realloc, __wbindgen_free */
+/*! exports provided: memory, __wbg_game_free, game_new, game_isDefeated, game_draw, __wbg_tower_free, __wbg_mouse_free, init, __wbg_button_free, __wbg_paperplane_free, __wbg_rect_free, __wbindgen_exn_store, __wbindgen_malloc, __wbindgen_realloc, __wbindgen_free */
 /***/ (function(module, exports, __webpack_require__) {
 
 eval("\"use strict\";\n// Instantiate WebAssembly module\nvar wasmExports = __webpack_require__.w[module.i];\n__webpack_require__.r(exports);\n// export exports from WebAssembly module\nfor(var name in wasmExports) if(name != \"__webpack_init__\") exports[name] = wasmExports[name];\n// exec imports from WebAssembly module (for esm order)\n/* harmony import */ var m0 = __webpack_require__(/*! ./waterguns_vs_paperplanes_wasm.js */ \"./crate/pkg/waterguns_vs_paperplanes_wasm.js\");\n\n\n// exec wasm module\nwasmExports[\"__webpack_init__\"]()\n\n//# sourceURL=webpack:///./crate/pkg/waterguns_vs_paperplanes_wasm_bg.wasm?");
