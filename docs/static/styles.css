@@ -1,0 +1,27 @@
+body {
+    background: black;
+}
+
+.centered {
+    padding: 0;
+    margin: auto;
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #00cc00;
+    font-size: 4em;
+    top: 25%;
+}
+
+
+#start-button {
+    background: #333333;
+    color: #00cc00;
+    font-size: 2em;
+    top: 50%;
+}

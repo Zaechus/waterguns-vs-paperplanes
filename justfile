@@ -26,3 +26,7 @@ wasm_plain:
 
 ts_plain:
     cd src/ts; tsc *.ts --outDir ..; cd ../..
+
+pages: build
+    cp -r dist/* docs/
+    cp -r public/* docs/
