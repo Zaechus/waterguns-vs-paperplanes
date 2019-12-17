@@ -8,4 +8,5 @@ dist
 
 *.js
 !index.js
+!docs/*.js
 !webpack.config.js
