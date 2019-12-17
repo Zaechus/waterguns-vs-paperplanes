@@ -13,7 +13,8 @@ members = [
 ]
 
 [dependencies]
-rocket = "0.4"
+actix-web = "1.0"
+actix-files = "0.1"
 
 [profile.release]
 opt-level = "s"
