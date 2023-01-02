@@ -8,9 +8,9 @@
   "license": "MIT",
   "dependencies": {
     "waterguns-vs-paperplanes": "file:./crate/pkg",
-    "webpack": "^4.39.3"
+    "webpack": "^5.75.0"
   },
   "devDependencies": {
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^5.0.1"
   }
 }
